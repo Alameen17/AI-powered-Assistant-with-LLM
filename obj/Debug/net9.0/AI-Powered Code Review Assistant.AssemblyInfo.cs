@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AI-Powered Code Review Assistant")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+105b1dd103c685077532efd71389a3410daa0505")]
 [assembly: System.Reflection.AssemblyProductAttribute("AI-Powered Code Review Assistant")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AI-Powered Code Review Assistant")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

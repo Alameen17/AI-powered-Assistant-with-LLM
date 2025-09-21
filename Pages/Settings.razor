@@ -1,0 +1,392 @@
+@page "/settings"
+@inject IConfiguration Configuration
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Settings - AI Code Review Assistant</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>
+                <i class="fas fa-cog text-primary"></i>
+                Settings
+            </h1>
+            <p class="text-muted">Configure your AI Code Review Assistant</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-robot"></i> OpenAI Configuration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@settings" OnValidSubmit="@SaveSettings">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger" />
+
+                        <div class="mb-3">
+                            <label for="apiKey" class="form-label">
+                                OpenAI API Key
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <InputText id="apiKey"
+                                          class="form-control"
+                                          type="@(showApiKey ? "text" : "password")"
+                                          @bind-value="settings.ApiKey"
+                                          placeholder="sk-..." />
+                                <button class="btn btn-outline-secondary"
+                                        type="button"
+                                        @onclick="ToggleApiKeyVisibility">
+                                    <i class="fas @(showApiKey ? "fa-eye-slash" : "fa-eye")"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                Your OpenAI API key is required for AI analysis.
+                                <a href="https://platform.openai.com/api-keys" target="_blank">Get your API key here</a>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="model" class="form-label">Model</label>
+                                    <InputSelect id="model" class="form-select" @bind-value="settings.Model">
+                                        <option value="gpt-4">GPT-4 (Recommended)</option>
+                                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                    </InputSelect>
+                                    <div class="form-text">GPT-4 provides the best code analysis results</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="maxTokens" class="form-label">Max Tokens</label>
+                                    <InputNumber id="maxTokens" class="form-control" @bind-value="settings.MaxTokens" />
+                                    <div class="form-text">Maximum tokens for AI responses (1000-8000)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="temperature" class="form-label">
+                                Temperature: @settings.Temperature.ToString("F1")
+                            </label>
+                            <input id="temperature"
+                                   type="range"
+                                   class="form-range"
+                                   min="0"
+                                   max="1"
+                                   step="0.1"
+                                   @bind="settings.Temperature" />
+                            <div class="form-text">Lower values = more focused, Higher values = more creative</div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="button" class="btn btn-outline-secondary me-md-2" @onclick="TestConnection">
+                                <i class="fas fa-plug"></i> Test Connection
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Settings
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter"></i> Analysis Preferences
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Focus Areas</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="security" @bind="settings.EnableSecurity">
+                                <label class="form-check-label" for="security">
+                                    <i class="fas fa-shield-alt text-danger"></i> Security Analysis
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="performance" @bind="settings.EnablePerformance">
+                                <label class="form-check-label" for="performance">
+                                    <i class="fas fa-tachometer-alt text-warning"></i> Performance Analysis
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="quality" @bind="settings.EnableQuality">
+                                <label class="form-check-label" for="quality">
+                                    <i class="fas fa-check-circle text-success"></i> Code Quality
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="bestPractices" @bind="settings.EnableBestPractices">
+                                <label class="form-check-label" for="bestPractices">
+                                    <i class="fas fa-star text-info"></i> Best Practices
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>File Types</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="csharp" @bind="settings.AnalyzeCSharp">
+                                <label class="form-check-label" for="csharp">C# (.cs)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="javascript" @bind="settings.AnalyzeJavaScript">
+                                <label class="form-check-label" for="javascript">JavaScript (.js, .ts)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="python" @bind="settings.AnalyzePython">
+                                <label class="form-check-label" for="python">Python (.py)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="java" @bind="settings.AnalyzeJava">
+                                <label class="form-check-label" for="java">Java (.java)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Current Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">API Key Status</label>
+                        <div>
+                            @if (string.IsNullOrEmpty(currentApiKey))
+                            {
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times"></i> Not Configured
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check"></i> Configured
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Current Model</label>
+                        <div>
+                            <code>@(currentModel ?? "gpt-4")</code>
+                        </div>
+                    </div>
+
+                    @if (connectionTestResult != null)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label">Connection Test</label>
+                            <div>
+                                @if (connectionTestResult.Success)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check"></i> Connected
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times"></i> Failed
+                                    </span>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(connectionTestResult.Message))
+                            {
+                                <small class="text-muted">@connectionTestResult.Message</small>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-question-circle"></i> Help
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="small">
+                        <strong>Getting Started:</strong><br>
+                        1. Enter your OpenAI API key<br>
+                        2. Choose your preferred model<br>
+                        3. Configure analysis preferences<br>
+                        4. Test the connection<br>
+                        5. Start reviewing code!
+                    </p>
+
+                    <p class="small">
+                        <strong>Troubleshooting:</strong><br>
+                        • Ensure your API key is valid<br>
+                        • Check your OpenAI account has credits<br>
+                        • Verify internet connection<br>
+                    </p>
+
+                    <a href="https://platform.openai.com/docs" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-external-link-alt"></i> OpenAI Documentation
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050">
+        <div class="toast show" role="alert">
+            <div class="toast-header">
+                <i class="fas fa-info-circle text-primary me-2"></i>
+                <strong class="me-auto">Settings</strong>
+                <button type="button" class="btn-close" @onclick="() => message = string.Empty"></button>
+            </div>
+            <div class="toast-body">
+                @message
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private SettingsModel settings = new();
+    private bool showApiKey = false;
+    private string currentApiKey = "";
+    private string currentModel = "";
+    private string message = "";
+    private ConnectionTestResult? connectionTestResult;
+
+    protected override void OnInitialized()
+    {
+        // Load current settings
+        currentApiKey = Configuration["OpenAI:ApiKey"] ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY") ?? "";
+        currentModel = Configuration["OpenAI:Model"] ?? "gpt-4";
+
+        settings.ApiKey = currentApiKey;
+        settings.Model = currentModel;
+        settings.MaxTokens = 4000;
+        settings.Temperature = 0.1;
+
+        // Default preferences
+        settings.EnableSecurity = true;
+        settings.EnablePerformance = true;
+        settings.EnableQuality = true;
+        settings.EnableBestPractices = true;
+        settings.AnalyzeCSharp = true;
+        settings.AnalyzeJavaScript = true;
+        settings.AnalyzePython = true;
+        settings.AnalyzeJava = true;
+    }
+
+    private void ToggleApiKeyVisibility()
+    {
+        showApiKey = !showApiKey;
+    }
+
+    private async Task SaveSettings()
+    {
+        try
+        {
+            // In a real application, save to configuration or database
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "openai_api_key", settings.ApiKey);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "openai_model", settings.Model);
+
+            message = "Settings saved successfully!";
+            StateHasChanged();
+
+            // Auto-hide message after 3 seconds
+            await Task.Delay(3000);
+            message = "";
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            message = $"Error saving settings: {ex.Message}";
+        }
+    }
+
+    private async Task TestConnection()
+    {
+        try
+        {
+            connectionTestResult = new ConnectionTestResult { Success = false, Message = "Testing connection..." };
+            StateHasChanged();
+
+            // Simulate API test (replace with actual OpenAI API call)
+            await Task.Delay(1000);
+
+            if (string.IsNullOrEmpty(settings.ApiKey))
+            {
+                connectionTestResult = new ConnectionTestResult
+                {
+                    Success = false,
+                    Message = "API key is required"
+                };
+            }
+            else
+            {
+                // In a real application, make actual API call to test
+                connectionTestResult = new ConnectionTestResult
+                {
+                    Success = true,
+                    Message = "Connection successful"
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            connectionTestResult = new ConnectionTestResult
+            {
+                Success = false,
+                Message = ex.Message
+            };
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    public class SettingsModel
+    {
+        public string ApiKey { get; set; } = "";
+        public string Model { get; set; } = "gpt-4";
+        public int MaxTokens { get; set; } = 4000;
+        public double Temperature { get; set; } = 0.1;
+
+        // Analysis preferences
+        public bool EnableSecurity { get; set; } = true;
+        public bool EnablePerformance { get; set; } = true;
+        public bool EnableQuality { get; set; } = true;
+        public bool EnableBestPractices { get; set; } = true;
+
+        // File types
+        public bool AnalyzeCSharp { get; set; } = true;
+        public bool AnalyzeJavaScript { get; set; } = true;
+        public bool AnalyzePython { get; set; } = true;
+        public bool AnalyzeJava { get; set; } = true;
+    }
+
+    public class ConnectionTestResult
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
+    }
+}

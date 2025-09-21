@@ -1,0 +1,211 @@
+@page "/"
+@using AI_Powered_Code_Review_Assistant.Interfaces
+@using AI_Powered_Code_Review_Assistant.Models
+@inject ICodeReviewService CodeReviewService
+
+<PageTitle>Dashboard - AI Code Review Assistant</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4">
+                <i class="fas fa-robot text-primary"></i>
+                AI-Powered Code Review Assistant
+            </h1>
+            <p class="lead text-muted">
+                Intelligent code analysis powered by AI for better software quality
+            </p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Security Analysis</h5>
+                    <p class="card-text">Detect vulnerabilities and security issues in your code</p>
+                    <a href="/review" class="btn btn-primary">Start Analysis</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Code Quality</h5>
+                    <p class="card-text">Assess maintainability, complexity, and best practices</p>
+                    <a href="/review" class="btn btn-success">Check Quality</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <i class="fas fa-tachometer-alt fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">Performance</h5>
+                    <p class="card-text">Identify performance bottlenecks and optimization opportunities</p>
+                    <a href="/review" class="btn btn-warning">Optimize Code</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-rocket"></i> Quick Start
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex align-items-center">
+                            <span class="badge bg-primary me-3">1</span>
+                            <div>
+                                <strong>Upload Code</strong><br>
+                                <small class="text-muted">Select files or connect Git repository</small>
+                            </div>
+                        </div>
+                        <div class="list-group-item d-flex align-items-center">
+                            <span class="badge bg-primary me-3">2</span>
+                            <div>
+                                <strong>AI Analysis</strong><br>
+                                <small class="text-muted">Let AI analyze your code for issues</small>
+                            </div>
+                        </div>
+                        <div class="list-group-item d-flex align-items-center">
+                            <span class="badge bg-primary me-3">3</span>
+                            <div>
+                                <strong>Review Results</strong><br>
+                                <small class="text-muted">Get detailed reports and recommendations</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line"></i> Features
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            OWASP Top 10 vulnerability detection
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Code complexity analysis
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Best practices enforcement
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Git integration for commits and PRs
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Multiple output formats
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Real-time progress tracking
+                        </li>
+                    </ul>
+                    <a href="/review" class="btn btn-outline-primary">
+                        <i class="fas fa-play"></i> Start Your First Review
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (recentReviews?.Any() == true)
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history"></i> Recent Reviews
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Repository</th>
+                                        <th>Files</th>
+                                        <th>Issues</th>
+                                        <th>Score</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var review in recentReviews.Take(5))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <i class="fas fa-folder"></i>
+                                                @Path.GetFileName(review.RepoPath)
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">@review.Summary.TotalFiles</span>
+                                            </td>
+                                            <td>
+                                                @if (review.Summary.CriticalIssues > 0)
+                                                {
+                                                    <span class="badge bg-danger">@review.Summary.CriticalIssues Critical</span>
+                                                }
+                                                @if (review.Summary.HighIssues > 0)
+                                                {
+                                                    <span class="badge bg-warning">@review.Summary.HighIssues High</span>
+                                                }
+                                                @if (review.Summary.TotalIssues == 0)
+                                                {
+                                                    <span class="badge bg-success">No Issues</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="fw-bold">@review.Summary.OverallScore</span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">@review.CreatedAt.ToString("MMM dd, HH:mm")</small>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i> View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<ReviewResult>? recentReviews;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // In a real application, this would load from a database
+        recentReviews = new List<ReviewResult>();
+    }
+}

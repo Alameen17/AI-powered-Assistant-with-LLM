@@ -115,3 +115,4 @@ C:\Users\alame\.dotnet\AI-Powered Code Review Assistant\AI-Powered Code Review A
 C:\Users\alame\.dotnet\AI-Powered Code Review Assistant\AI-Powered Code Review Assistant\obj\Debug\net9.0\AI-Powered Code Review Assistant.pdb
 C:\Users\alame\.dotnet\AI-Powered Code Review Assistant\AI-Powered Code Review Assistant\obj\Debug\net9.0\AI-Powered Code Review Assistant.genruntimeconfig.cache
 C:\Users\alame\.dotnet\AI-Powered Code Review Assistant\AI-Powered Code Review Assistant\obj\Debug\net9.0\ref\AI-Powered Code Review Assistant.dll
+C:\Users\alame\.dotnet\AI-Powered Code Review Assistant\AI-Powered Code Review Assistant\obj\Debug\net9.0\AI-Powered Code Review Assistant.sourcelink.json
