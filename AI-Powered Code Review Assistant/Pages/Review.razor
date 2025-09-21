@@ -1,451 +1,356 @@
 @page "/review"
 @using AI_Powered_Code_Review_Assistant.Interfaces
 @using AI_Powered_Code_Review_Assistant.Models
-@using Microsoft.JSInterop
 @inject ICodeReviewService CodeReviewService
 @inject IGitService GitService
 @inject IJSRuntime JSRuntime
-@implements IDisposable
+@inject NavigationManager Navigation
 
-<PageTitle>Code Review - AI Assistant</PageTitle>
+<PageTitle>AI Code Review</PageTitle>
 
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1>
-                <i class="fas fa-magnifying-glass text-primary"></i>
-                Code Review
-            </h1>
-            <p class="text-muted">Upload your code or connect a Git repository for AI-powered analysis</p>
-        </div>
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold text-gradient">AI Code Review Assistant</h1>
+        <p class="text-muted fs-5">Intelligent analysis for security, quality, and maintainability</p>
     </div>
 
-    @if (!isAnalyzing && reviewResult == null)
-    {
-        <!-- Input Form -->
-        <div class="row">
-            <div class="col-lg-8 mx-auto">
-                <div class="card">
-                    <div class="card-header">
-                        <ul class="nav nav-tabs card-header-tabs" role="tablist">
-                            <li class="nav-item">
-                                <button class="nav-link @(activeTab == "repository" ? "active" : "")"
-                                        @onclick='() => SetActiveTab("repository")'
-                                        type="button">
-                                    <i class="fas fa-code-branch"></i> Git Repository
-                                </button>
-                            </li>
-                            <li class="nav-item">
-                                <button class="nav-link @(activeTab == "files" ? "active" : "")"
-                                        @onclick='() => SetActiveTab("files")'
-                                        type="button">
-                                    <i class="fas fa-file-code"></i> Upload Files
-                                </button>
-                            </li>
-                            <li class="nav-item">
-                                <button class="nav-link @(activeTab == "directory" ? "active" : "")"
-                                        @onclick='() => SetActiveTab("directory")'
-                                        type="button">
-                                    <i class="fas fa-folder"></i> Local Directory
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="card-body">
-                        @if (activeTab == "repository")
-                        {
-                            <EditForm Model="@reviewRequest" OnValidSubmit="@ReviewRepository">
-                                <DataAnnotationsValidator />
-                                <ValidationSummary class="text-danger" />
-
-                                <div class="mb-3">
-                                    <label for="repoPath" class="form-label">Repository Path</label>
-                                    <div class="input-group">
-                                        <InputText id="repoPath" class="form-control" @bind-value="reviewRequest.RepositoryPath"
-                                                   placeholder="C:/path/to/your/repository" />
-                                        <button type="button" class="btn btn-outline-secondary" @onclick="BrowseForRepository">
-                                            <i class="fas fa-folder-open"></i> Browse
-                                        </button>
-                                    </div>
-                                    <div class="form-text">Path to your local Git repository</div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="reviewType" class="form-label">Review Type</label>
-                                            <InputSelect id="reviewType" class="form-select" @bind-value="reviewRequest.ReviewType">
-                                                <option value="directory">Full Repository</option>
-                                                <option value="commit">Specific Commit</option>
-                                                <option value="changes">Uncommitted Changes</option>
-                                            </InputSelect>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        @if (reviewRequest.ReviewType == "commit")
-                                        {
-                                            <div class="mb-3">
-                                                <label for="commitHash" class="form-label">Commit Hash</label>
-                                                <InputText id="commitHash" class="form-control" @bind-value="reviewRequest.CommitHash"
-                                                           placeholder="abc123def..." />
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary btn-lg" disabled="@isAnalyzing">
-                                        <i class="fas fa-play"></i> Start Analysis
-                                    </button>
-                                </div>
-                            </EditForm>
-                        }
-                        else if (activeTab == "files")
-                        {
-                            <div class="upload-zone" id="dropZone">
-                                <i class="fas fa-cloud-upload-alt fa-4x mb-3"></i>
-                                <h5>Upload Code Files</h5>
-                                <p class="text-muted">Drag and drop files here or click to browse</p>
-                                <button type="button" class="btn btn-primary mb-3">
-                                    <i class="fas fa-file-plus"></i> Choose Files
-                                </button>
-                                <input type="file" id="fileInput" multiple accept=".cs,.js,.ts,.py,.java,.cpp,.go,.rs,.php,.rb,.c,.h,.jsx,.tsx,.vue" style="display: none;" />
-                                <div class="mt-3">
-                                    <small class="text-muted">
-                                        Supported: .cs, .js, .ts, .py, .java, .cpp, .go, .rs, .php, .rb, .c, .h, .jsx, .tsx, .vue
-                                    </small>
-                                </div>
-                            </div>
-
-                            @if (uploadedFiles.Any())
-                            {
-                                <div class="mt-4">
-                                    <h6><i class="fas fa-files"></i> Uploaded Files (@uploadedFiles.Count)</h6>
-                                    <div class="list-group">
-                                        @foreach (var file in uploadedFiles)
-                                        {
-                                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <i class="fas fa-file-code text-primary me-2"></i>
-                                                    <strong>@file.Key</strong>
-                                                    <small class="text-muted ms-2">(@(file.Value.Length / 1024)KB)</small>
-                                                </div>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => RemoveFile(file.Key)">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                            </div>
-                                        }
-                                    </div>
-                                    <div class="d-grid mt-3">
-                                        <button type="button" class="btn btn-primary btn-lg" @onclick="ReviewUploadedFiles" disabled="@isAnalyzing">
-                                            <i class="fas fa-play"></i> Analyze Uploaded Files
-                                        </button>
-                                    </div>
-                                </div>
-                            }
-                        }
-                        else if (activeTab == "directory")
-                        {
-                            <EditForm Model="@reviewRequest" OnValidSubmit="@ReviewDirectory">
-                                <div class="mb-3">
-                                    <label for="directoryPath" class="form-label">Directory Path</label>
-                                    <div class="input-group">
-                                        <InputText id="directoryPath" class="form-control" @bind-value="reviewRequest.DirectoryPath"
-                                                   placeholder="C:/path/to/your/project" />
-                                        <button type="button" class="btn btn-outline-secondary" @onclick="BrowseForDirectory">
-                                            <i class="fas fa-folder-open"></i> Browse
-                                        </button>
-                                    </div>
-                                    <div class="form-text">Path to your project directory</div>
-                                </div>
-
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary btn-lg" disabled="@isAnalyzing">
-                                        <i class="fas fa-play"></i> Analyze Directory
-                                    </button>
-                                </div>
-                            </EditForm>
-                        }
-                    </div>
-                </div>
-            </div>
+    <!-- Tabs for Input Selection -->
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-light border-0">
+            <ul class="nav nav-pills justify-content-center" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link @(activeTab == "repository" ? "active" : "")"
+                            @onclick='() => SetActiveTab("repository")'>
+                        <i class="fas fa-code-branch me-2"></i>Git Repository
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link @(activeTab == "files" ? "active" : "")"
+                            @onclick='() => SetActiveTab("files")'>
+                        <i class="fas fa-file-code me-2"></i>Upload Files
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link @(activeTab == "directory" ? "active" : "")"
+                            @onclick='() => SetActiveTab("directory")'>
+                        <i class="fas fa-folder me-2"></i>Local Directory
+                    </button>
+                </li>
+            </ul>
         </div>
-    }
 
-    @if (isAnalyzing)
-    {
-        <!-- Analysis Progress -->
-        <div class="row">
-            <div class="col-lg-8 mx-auto">
-                <div class="card">
-                    <div class="card-body text-center py-5">
-                        <div class="spinner-border text-primary mb-3" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <h4>AI Analysis in Progress</h4>
-                        <p class="text-muted">@progressMessage</p>
-
-                        @if (progressPercentage > 0)
-                        {
-                            <div class="progress mt-3" style="height: 10px;">
-                                <div class="progress-bar" role="progressbar"
-                                     style="width: @(progressPercentage)%"
-                                     aria-valuenow="@progressPercentage"
-                                     aria-valuemin="0"
-                                     aria-valuemax="100">
-                                </div>
-                            </div>
-                            <small class="text-muted">@progressPercentage% complete</small>
-                        }
-                    </div>
+        <div class="card-body p-4">
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>@errorMessage
                 </div>
-            </div>
-        </div>
-    }
+            }
 
-    @if (reviewResult != null)
-    {
-        <!-- Results Display -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="fas fa-chart-bar"></i> Analysis Results
-                        </h5>
-                        <div>
-                            <button class="btn btn-outline-secondary me-2" @onclick="StartNewReview">
-                                <i class="fas fa-plus"></i> New Review
-                            </button>
-                            <button class="btn btn-success" @onclick="ExportResults">
-                                <i class="fas fa-download"></i> Export
+            @if (activeTab == "repository")
+            {
+                <EditForm Model="@reviewRequest" OnValidSubmit="@ReviewRepository">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Repository Path</label>
+                        <div class="input-group">
+                            <InputText class="form-control rounded-start"
+                                       @bind-value="reviewRequest.RepositoryPath"
+                                       placeholder="C:/path/to/repository"
+                                       disabled="@isProcessing" />
+                            <button type="button" class="btn btn-outline-secondary" @onclick="BrowseForRepository" disabled="@isProcessing">
+                                <i class="fas fa-folder-open"></i>
                             </button>
                         </div>
+                        <small class="text-muted">Enter the path to your Git repository</small>
                     </div>
-                    <div class="card-body">
-                        <!-- Summary Cards -->
-                        <div class="row mb-4">
-                            <div class="col-lg-3 col-md-6 mb-3">
-                                <div class="card bg-primary text-white">
-                                    <div class="card-body text-center">
-                                        <h3 class="card-title">@reviewResult.Summary.TotalFiles</h3>
-                                        <p class="card-text">Files Analyzed</p>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Review Type</label>
+                            <InputSelect class="form-select" @bind-value="reviewRequest.ReviewType" disabled="@isProcessing">
+                                <option value="directory">Full Repository</option>
+                                <option value="commit">Specific Commit</option>
+                                <option value="changes">Uncommitted Changes</option>
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6">
+                            @if (reviewRequest.ReviewType == "commit")
+                            {
+                                <label class="form-label fw-semibold">Commit Hash</label>
+                                <InputText class="form-control" @bind-value="reviewRequest.CommitHash"
+                                           placeholder="abc123..."
+                                           disabled="@isProcessing" />
+                            }
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg shadow" disabled="@isProcessing">
+                            @if (isProcessing)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Analyzing...</span>
+                            }
+                            else
+                            {
+                                <i class="fas fa-play me-2"></i>
+                                <span>Start Analysis</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            }
+            else if (activeTab == "files")
+            {
+                <div class="upload-zone text-center p-5 border rounded-4 bg-light position-relative">
+                    <InputFile @ref="fileInput" OnChange="OnFileSelected" multiple accept=".cs,.js,.ts,.py,.java,.cpp,.c,.h,.hpp,.html,.css,.jsx,.tsx,.php,.rb,.go,.rs,.swift,.kt,.scala,.sql,.xml,.json,.yaml,.yml" style="display: none;" disabled="@isProcessing" />
+
+                    @if (uploadedFiles.Any())
+                    {
+                        <div class="mb-3">
+                            <h6 class="fw-semibold">Selected Files:</h6>
+                            <div class="list-group list-group-flush">
+                                @foreach (var file in uploadedFiles.Keys)
+                                {
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-file-code me-2"></i>@file</span>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => RemoveFile(file)" disabled="@isProcessing">
+                                            <i class="fas fa-times"></i>
+                                        </button>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-3 col-md-6 mb-3">
-                                <div class="card bg-danger text-white">
-                                    <div class="card-body text-center">
-                                        <h3 class="card-title">@reviewResult.Summary.CriticalIssues</h3>
-                                        <p class="card-text">Critical Issues</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-3 col-md-6 mb-3">
-                                <div class="card bg-warning text-white">
-                                    <div class="card-body text-center">
-                                        <h3 class="card-title">@reviewResult.Summary.HighIssues</h3>
-                                        <p class="card-text">High Priority</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-3 col-md-6 mb-3">
-                                <div class="card bg-success text-white">
-                                    <div class="card-body text-center">
-                                        <h3 class="card-title">@reviewResult.Summary.OverallScore</h3>
-                                        <p class="card-text">Overall Score</p>
-                                    </div>
-                                </div>
+                                }
                             </div>
                         </div>
+                    }
 
-                        <!-- Detailed Results -->
-                        @if (reviewResult.Reviews.Any())
+                    <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                    <h5 class="fw-semibold">Upload Code Files</h5>
+                    <p class="text-muted">Drag & drop files here or click to browse</p>
+
+                    <div class="d-flex flex-column gap-2">
+                        <button type="button" class="btn btn-primary" @onclick="TriggerFileInput" disabled="@isProcessing">
+                            <i class="fas fa-file-plus me-2"></i>Choose Files
+                        </button>
+
+                        @if (uploadedFiles.Any())
                         {
-                            <h5 class="mb-3">
-                                <i class="fas fa-list"></i> Detailed Analysis
-                            </h5>
-
-                            @foreach (var review in reviewResult.Reviews)
-                            {
-                                <div class="card mb-3">
-                                    <div class="card-header">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <h6 class="mb-0">
-                                                <i class="fas fa-file-code"></i>
-                                                @review.FilePath
-                                            </h6>
-                                            <span class="badge @GetSeverityBadgeClass(review.Severity)">
-                                                @review.Severity
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="card-body">
-                                        @if (review.Issues.Any())
-                                        {
-                                            <h6>Issues Found:</h6>
-                                            @foreach (var issue in review.Issues)
-                                            {
-                                                <div class="alert @GetIssueAlertClass(issue.Severity) mb-2">
-                                                    <div class="d-flex justify-content-between">
-                                                        <strong>@issue.Title</strong>
-                                                        <small>@issue.Category | @issue.Severity</small>
-                                                    </div>
-                                                    <p class="mb-1">@issue.Description</p>
-                                                    @if (issue.LineNumber.HasValue)
-                                                    {
-                                                        <small class="text-muted">Line: @issue.LineNumber</small>
-                                                    }
-                                                </div>
-                                            }
-                                        }
-
-                                        @if (review.Suggestions.Any())
-                                        {
-                                            <h6>Suggestions:</h6>
-                                            @foreach (var suggestion in review.Suggestions)
-                                            {
-                                                <div class="alert alert-info mb-2">
-                                                    <strong>@suggestion.Title</strong>
-                                                    <p class="mb-1">@suggestion.Description</p>
-                                                    @if (!string.IsNullOrEmpty(suggestion.RecommendedChange))
-                                                    {
-                                                        <small class="text-muted">Recommended: @suggestion.RecommendedChange</small>
-                                                    }
-                                                </div>
-                                            }
-                                        }
-                                    </div>
-                                </div>
-                            }
+                            <button type="button" class="btn btn-success btn-lg" @onclick="ReviewUploadedFiles" disabled="@isProcessing">
+                                @if (isProcessing)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Analyzing...</span>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-play me-2"></i>
+                                    <span>Analyze Files (@uploadedFiles.Count)</span>
+                                }
+                            </button>
                         }
                     </div>
                 </div>
-            </div>
+            }
+            else if (activeTab == "directory")
+            {
+                <EditForm Model="@reviewRequest" OnValidSubmit="@ReviewDirectory">
+                    <label class="form-label fw-semibold">Directory Path</label>
+                    <div class="input-group">
+                        <InputText class="form-control" @bind-value="reviewRequest.DirectoryPath"
+                                   placeholder="C:/path/to/project"
+                                   disabled="@isProcessing" />
+                        <button type="button" class="btn btn-outline-secondary" @onclick="BrowseForDirectory" disabled="@isProcessing">
+                            <i class="fas fa-folder-open"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted">Enter the path to a directory containing code files</small>
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg shadow" disabled="@isProcessing">
+                            @if (isProcessing)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Analyzing...</span>
+                            }
+                            else
+                            {
+                                <i class="fas fa-search me-2"></i>
+                                <span>Analyze Directory</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            }
         </div>
-    }
-
-    @if (!string.IsNullOrEmpty(errorMessage))
-    {
-        <div class="alert alert-danger">
-            <i class="fas fa-exclamation-triangle"></i>
-            @errorMessage
-        </div>
-    }
+    </div>
 </div>
 
 @code {
     private ReviewRequest reviewRequest = new();
-    private ReviewResult? reviewResult;
-    private bool isAnalyzing = false;
     private string activeTab = "repository";
-    private string progressMessage = "";
-    private int progressPercentage = 0;
-    private string errorMessage = "";
+    private bool isProcessing = false;
+    private string? errorMessage;
+    private InputFile? fileInput;
     private Dictionary<string, string> uploadedFiles = new();
 
-    private void SetActiveTab(string tab)
-    {
-        activeTab = tab;
-    }
+    private void SetActiveTab(string tab) => activeTab = tab;
 
     private async Task ReviewRepository()
     {
-        await StartAnalysis(async () =>
+        if (string.IsNullOrWhiteSpace(reviewRequest.RepositoryPath))
         {
-            progressMessage = "Validating repository...";
+            errorMessage = "Please provide a repository path.";
+            return;
+        }
+
+        isProcessing = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            ReviewResult result;
+
+            switch (reviewRequest.ReviewType)
+            {
+                case "commit":
+                    if (string.IsNullOrWhiteSpace(reviewRequest.CommitHash))
+                    {
+                        errorMessage = "Please provide a commit hash.";
+                        return;
+                    }
+                    result = await CodeReviewService.ReviewCommitAsync(reviewRequest.RepositoryPath, reviewRequest.CommitHash);
+                    break;
+                case "changes":
+                    // For uncommitted changes, we'll review the directory
+                    result = await CodeReviewService.ReviewDirectoryAsync(reviewRequest.RepositoryPath);
+                    break;
+                default:
+                    result = await CodeReviewService.ReviewDirectoryAsync(reviewRequest.RepositoryPath);
+                    break;
+            }
+
+            // Navigate to results page with the result
+            await NavigateToResults(result);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error during review: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
             StateHasChanged();
-
-            if (string.IsNullOrWhiteSpace(reviewRequest.RepositoryPath))
-            {
-                throw new Exception("Repository path is required");
-            }
-
-            if (!Directory.Exists(reviewRequest.RepositoryPath))
-            {
-                throw new Exception("Repository path does not exist");
-            }
-
-            if (!GitService.IsGitRepository(reviewRequest.RepositoryPath))
-            {
-                throw new Exception("The specified path is not a valid Git repository");
-            }
-
-            progressMessage = "Analyzing repository structure...";
-            progressPercentage = 25;
-            StateHasChanged();
-
-            if (reviewRequest.ReviewType == "commit" && !string.IsNullOrEmpty(reviewRequest.CommitHash))
-            {
-                progressMessage = "Analyzing specific commit...";
-                progressPercentage = 50;
-                StateHasChanged();
-                return await CodeReviewService.ReviewCommitAsync(reviewRequest.RepositoryPath, reviewRequest.CommitHash);
-            }
-            else if (reviewRequest.ReviewType == "changes")
-            {
-                progressMessage = "Analyzing uncommitted changes...";
-                progressPercentage = 50;
-                StateHasChanged();
-                // For now, fall back to directory review - could implement specific changes review later
-                return await CodeReviewService.ReviewDirectoryAsync(reviewRequest.RepositoryPath);
-            }
-            else
-            {
-                progressMessage = "Analyzing entire repository...";
-                progressPercentage = 50;
-                StateHasChanged();
-                return await CodeReviewService.ReviewDirectoryAsync(reviewRequest.RepositoryPath);
-            }
-        });
+        }
     }
 
     private async Task ReviewDirectory()
     {
-        await StartAnalysis(async () =>
+        if (string.IsNullOrWhiteSpace(reviewRequest.DirectoryPath))
         {
-            progressMessage = "Scanning directory...";
-            StateHasChanged();
+            errorMessage = "Please provide a directory path.";
+            return;
+        }
 
-            if (!Directory.Exists(reviewRequest.DirectoryPath))
-            {
-                throw new Exception("Directory does not exist");
-            }
-
-            progressMessage = "Analyzing code with AI...";
-            progressPercentage = 50;
-            StateHasChanged();
-
-            return await CodeReviewService.ReviewDirectoryAsync(reviewRequest.DirectoryPath);
-        });
-    }
-
-    private async Task ReviewUploadedFiles()
-    {
-        await StartAnalysis(async () =>
-        {
-            progressMessage = "Processing uploaded files...";
-            StateHasChanged();
-
-            if (!uploadedFiles.Any())
-            {
-                throw new Exception("No files uploaded");
-            }
-
-            progressMessage = "Analyzing code with AI...";
-            progressPercentage = 50;
-            StateHasChanged();
-
-            return await CodeReviewService.ReviewFilesAsync(uploadedFiles);
-        });
-    }
-
-    [JSInvokable]
-    public Task AddUploadedFile(string fileName, string content)
-    {
-        uploadedFiles[fileName] = content;
+        isProcessing = true;
+        errorMessage = null;
         StateHasChanged();
-        return Task.CompletedTask;
+
+        try
+        {
+            var result = await CodeReviewService.ReviewDirectoryAsync(reviewRequest.DirectoryPath);
+            await NavigateToResults(result);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error during review: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task BrowseForRepository()
+    {
+        try
+        {
+            var selectedPath = await JSRuntime.InvokeAsync<string>("fileUploadHelper.browseForDirectory");
+            if (!string.IsNullOrEmpty(selectedPath))
+            {
+                reviewRequest.RepositoryPath = selectedPath;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error browsing for repository: {ex.Message}";
+        }
+    }
+
+    private async Task BrowseForDirectory()
+    {
+        try
+        {
+            var selectedPath = await JSRuntime.InvokeAsync<string>("fileUploadHelper.browseForDirectory");
+            if (!string.IsNullOrEmpty(selectedPath))
+            {
+                reviewRequest.DirectoryPath = selectedPath;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error browsing for directory: {ex.Message}";
+        }
+    }
+
+    private async Task NavigateToResults(ReviewResult result)
+    {
+        // Store the result in session state or pass it to the results page
+        var resultJson = System.Text.Json.JsonSerializer.Serialize(result);
+        await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "reviewResult", resultJson);
+
+        // Navigate to results page
+        Navigation.NavigateTo("/results");
+    }
+
+    private async Task TriggerFileInput()
+    {
+        if (fileInput?.Element != null)
+        {
+            await JSRuntime.InvokeVoidAsync("triggerFileInput", fileInput.Element);
+        }
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        errorMessage = null;
+        const long maxFileSize = 1024 * 1024 * 5; // 5MB limit per file
+
+        try
+        {
+            foreach (var file in e.GetMultipleFiles(20)) // Max 20 files
+            {
+                if (file.Size > maxFileSize)
+                {
+                    errorMessage = $"File {file.Name} is too large. Maximum size is 5MB.";
+                    continue;
+                }
+
+                // Read file content
+                using var stream = file.OpenReadStream(maxFileSize);
+                using var reader = new StreamReader(stream);
+                var content = await reader.ReadToEndAsync();
+
+                uploadedFiles[file.Name] = content;
+            }
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error reading files: {ex.Message}";
+        }
     }
 
     private void RemoveFile(string fileName)
@@ -454,88 +359,32 @@
         StateHasChanged();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private async Task ReviewUploadedFiles()
     {
-        if (firstRender)
+        if (!uploadedFiles.Any())
         {
-            var dotNetRef = DotNetObjectReference.Create(this);
-            await JSRuntime.InvokeVoidAsync("fileUploadHelper.setComponentInstance", dotNetRef);
-            await JSRuntime.InvokeVoidAsync("fileUploadHelper.initializeDropZone", "dropZone", "fileInput");
+            errorMessage = "Please select files to review.";
+            return;
         }
-    }
 
-    public void Dispose()
-    {
-        // Clean up the reference
-    }
+        isProcessing = true;
+        errorMessage = null;
+        StateHasChanged();
 
-    private async Task StartAnalysis(Func<Task<ReviewResult>> analysisFunc)
-    {
         try
         {
-            isAnalyzing = true;
-            errorMessage = "";
-            progressPercentage = 25;
-            StateHasChanged();
-
-            reviewResult = await analysisFunc();
-
-            progressMessage = "Analysis complete!";
-            progressPercentage = 100;
-            StateHasChanged();
-
-            await Task.Delay(500); // Brief pause to show completion
+            var result = await CodeReviewService.ReviewFilesAsync(uploadedFiles);
+            await NavigateToResults(result);
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message;
+            errorMessage = $"Error during review: {ex.Message}";
         }
         finally
         {
-            isAnalyzing = false;
+            isProcessing = false;
             StateHasChanged();
         }
-    }
-
-    private void StartNewReview()
-    {
-        reviewResult = null;
-        reviewRequest = new ReviewRequest();
-        errorMessage = "";
-        progressPercentage = 0;
-        progressMessage = "";
-    }
-
-    private async Task ExportResults()
-    {
-        if (reviewResult != null)
-        {
-            await JSRuntime.InvokeVoidAsync("alert", "Export functionality coming soon!");
-        }
-    }
-
-    private string GetSeverityBadgeClass(Severity severity)
-    {
-        return severity switch
-        {
-            Severity.Critical => "bg-danger",
-            Severity.High => "bg-warning",
-            Severity.Medium => "bg-info",
-            Severity.Low => "bg-success",
-            _ => "bg-secondary"
-        };
-    }
-
-    private string GetIssueAlertClass(Severity severity)
-    {
-        return severity switch
-        {
-            Severity.Critical => "alert-danger",
-            Severity.High => "alert-warning",
-            Severity.Medium => "alert-info",
-            Severity.Low => "alert-success",
-            _ => "alert-secondary"
-        };
     }
 
     public class ReviewRequest

@@ -1,0 +1,352 @@
+@page "/results"
+@using AI_Powered_Code_Review_Assistant.Models
+@using System.Text.Json
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+
+<PageTitle>Review Results - AI Code Review</PageTitle>
+
+<div class="container py-5">
+    @if (reviewResult == null)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading review results...</p>
+        </div>
+    }
+    else
+    {
+        <!-- Header Section -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="fw-bold text-gradient">Review Results</h1>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-folder me-2"></i>@reviewResult.RepoPath
+                    @if (!string.IsNullOrEmpty(reviewResult.CommitHash))
+                    {
+                        <span class="ms-3"><i class="fas fa-code-commit me-2"></i>@reviewResult.CommitHash.Substring(0, 8)</span>
+                    }
+                    <span class="ms-3"><i class="fas fa-clock me-2"></i>@reviewResult.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                    <span class="ms-3"><i class="fas fa-stopwatch me-2"></i>@reviewResult.Duration.TotalSeconds.ToString("F1")s</span>
+                </p>
+            </div>
+            <div>
+                <button class="btn btn-outline-secondary me-2" @onclick="ExportResults">
+                    <i class="fas fa-download me-2"></i>Export
+                </button>
+                <button class="btn btn-primary" @onclick="StartNewReview">
+                    <i class="fas fa-plus me-2"></i>New Review
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="display-4 fw-bold text-primary">@reviewResult.Summary.TotalFiles</div>
+                        <div class="text-muted">Files Analyzed</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="display-4 fw-bold text-warning">@reviewResult.Summary.TotalIssues</div>
+                        <div class="text-muted">Total Issues</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="display-4 fw-bold text-danger">@reviewResult.Summary.CriticalIssues</div>
+                        <div class="text-muted">Critical Issues</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="display-4 fw-bold @GetScoreColor(reviewResult.Summary.OverallScore)">@GetScoreGrade(reviewResult.Summary.OverallScore)</div>
+                        <div class="text-muted">Overall Score</div>
+                        <small class="text-muted">@reviewResult.Summary.OverallScore</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issues Breakdown -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Issues by Severity</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col">
+                                <div class="fw-bold text-danger fs-4">@reviewResult.Summary.CriticalIssues</div>
+                                <small class="text-muted">Critical</small>
+                            </div>
+                            <div class="col">
+                                <div class="fw-bold text-warning fs-4">@reviewResult.Summary.HighIssues</div>
+                                <small class="text-muted">High</small>
+                            </div>
+                            <div class="col">
+                                <div class="fw-bold text-info fs-4">@reviewResult.Summary.MediumIssues</div>
+                                <small class="text-muted">Medium</small>
+                            </div>
+                            <div class="col">
+                                <div class="fw-bold text-secondary fs-4">@reviewResult.Summary.LowIssues</div>
+                                <small class="text-muted">Low</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Issues by Category</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col">
+                                <div class="fw-bold text-danger fs-4">@reviewResult.Summary.SecurityIssues</div>
+                                <small class="text-muted">Security</small>
+                            </div>
+                            <div class="col">
+                                <div class="fw-bold text-warning fs-4">@reviewResult.Summary.PerformanceIssues</div>
+                                <small class="text-muted">Performance</small>
+                            </div>
+                            <div class="col">
+                                <div class="fw-bold text-info fs-4">@reviewResult.Summary.QualityIssues</div>
+                                <small class="text-muted">Quality</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Recommendations -->
+        @if (reviewResult.Summary.TopRecommendations.Any())
+        {
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Top Recommendations</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var recommendation in reviewResult.Summary.TopRecommendations)
+                        {
+                            <li class="mb-2">
+                                <i class="fas fa-arrow-right text-primary me-2"></i>@recommendation
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+
+        <!-- File Reviews -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-file-code me-2"></i>File Reviews (@reviewResult.Reviews.Count)</h5>
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="filter" id="all" @onchange='() => SetFilter("all")' checked="@(currentFilter == "all")">
+                    <label class="btn btn-outline-secondary btn-sm" for="all">All</label>
+
+                    <input type="radio" class="btn-check" name="filter" id="issues" @onchange='() => SetFilter("issues")' checked="@(currentFilter == "issues")">
+                    <label class="btn btn-outline-secondary btn-sm" for="issues">With Issues</label>
+
+                    <input type="radio" class="btn-check" name="filter" id="critical" @onchange='() => SetFilter("critical")' checked="@(currentFilter == "critical")">
+                    <label class="btn btn-outline-secondary btn-sm" for="critical">Critical</label>
+                </div>
+            </div>
+            <div class="card-body">
+                @foreach (var review in GetFilteredReviews())
+                {
+                    <div class="border rounded-3 mb-3 p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="fw-semibold mb-1">
+                                    <i class="fas fa-file-code me-2"></i>@review.FilePath
+                                </h6>
+                                <div class="d-flex gap-2">
+                                    <span class="badge @GetSeverityBadgeClass(review.Severity)">@review.Severity</span>
+                                    <span class="badge bg-light text-dark">@review.Type</span>
+                                    @if (review.Issues.Any())
+                                    {
+                                        <span class="badge bg-warning text-dark">@review.Issues.Count issue(s)</span>
+                                    }
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#review-@review.GetHashCode()">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+
+                        <div class="collapse" id="review-@review.GetHashCode()">
+                            @if (review.Issues.Any())
+                            {
+                                <div class="mb-3">
+                                    <h6 class="fw-semibold text-danger">Issues Found:</h6>
+                                    @foreach (var issue in review.Issues)
+                                    {
+                                        <div class="alert alert-@GetSeverityAlertClass(issue.Severity) py-2">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <strong>@issue.Title</strong>
+                                                    @if (issue.LineNumber.HasValue)
+                                                    {
+                                                        <span class="badge bg-secondary ms-2">Line @issue.LineNumber</span>
+                                                    }
+                                                    <p class="mb-1 mt-1">@issue.Description</p>
+                                                    <small class="text-muted">@issue.Rule</small>
+                                                </div>
+                                                <span class="badge @GetSeverityBadgeClass(issue.Severity)">@issue.Severity</span>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            @if (review.Suggestions.Any())
+                            {
+                                <div class="mb-3">
+                                    <h6 class="fw-semibold text-info">Suggestions:</h6>
+                                    @foreach (var suggestion in review.Suggestions)
+                                    {
+                                        <div class="alert alert-info py-2">
+                                            <strong>@suggestion.Title</strong>
+                                            <p class="mb-1 mt-1">@suggestion.Description</p>
+                                            @if (!string.IsNullOrEmpty(suggestion.RecommendedChange))
+                                            {
+                                                <small class="text-muted"><strong>Recommended:</strong> @suggestion.RecommendedChange</small>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            <div class="bg-light rounded p-3">
+                                <h6 class="fw-semibold">AI Analysis:</h6>
+                                <div style="white-space: pre-wrap;">@review.ReviewText</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (!GetFilteredReviews().Any())
+                {
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-search fa-3x mb-3"></i>
+                        <p>No reviews match the current filter.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private ReviewResult? reviewResult;
+    private string currentFilter = "all";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var resultJson = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "reviewResult");
+            if (!string.IsNullOrEmpty(resultJson))
+            {
+                reviewResult = System.Text.Json.JsonSerializer.Deserialize<ReviewResult>(resultJson);
+            }
+            else
+            {
+                // No review result found, redirect back to review page
+                Navigation.NavigateTo("/review");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error loading results
+            Navigation.NavigateTo("/review");
+        }
+    }
+
+    private void SetFilter(string filter)
+    {
+        currentFilter = filter;
+        StateHasChanged();
+    }
+
+    private IEnumerable<Models.Review> GetFilteredReviews()
+    {
+        if (reviewResult?.Reviews == null) return Enumerable.Empty<Models.Review>();
+
+        return currentFilter switch
+        {
+            "issues" => reviewResult.Reviews.Where(r => r.Issues.Any()),
+            "critical" => reviewResult.Reviews.Where(r => r.Issues.Any(i => i.Severity == Models.Severity.Critical)),
+            _ => reviewResult.Reviews
+        };
+    }
+
+    private string GetSeverityBadgeClass(Models.Severity severity) => severity switch
+    {
+        Models.Severity.Critical => "bg-danger",
+        Models.Severity.High => "bg-warning",
+        Models.Severity.Medium => "bg-info",
+        Models.Severity.Low => "bg-secondary",
+        _ => "bg-light text-dark"
+    };
+
+    private string GetSeverityAlertClass(Models.Severity severity) => severity switch
+    {
+        Models.Severity.Critical => "danger",
+        Models.Severity.High => "warning",
+        Models.Severity.Medium => "info",
+        Models.Severity.Low => "secondary",
+        _ => "light"
+    };
+
+    private string GetScoreColor(string score) => score switch
+    {
+        var s when s.StartsWith("A") => "text-success",
+        var s when s.StartsWith("B") => "text-info",
+        var s when s.StartsWith("C") => "text-warning",
+        var s when s.StartsWith("D") => "text-orange",
+        _ => "text-danger"
+    };
+
+    private string GetScoreGrade(string score) => score.Split(' ')[0];
+
+    private async Task ExportResults()
+    {
+        if (reviewResult == null) return;
+
+        try
+        {
+            var exportData = System.Text.Json.JsonSerializer.Serialize(reviewResult, new JsonSerializerOptions { WriteIndented = true });
+            var fileName = $"code-review-{reviewResult.CreatedAt:yyyyMMdd-HHmmss}.json";
+
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, exportData, "application/json");
+        }
+        catch (Exception ex)
+        {
+            // Handle export error
+            await JSRuntime.InvokeVoidAsync("alert", $"Error exporting results: {ex.Message}");
+        }
+    }
+
+    private void StartNewReview()
+    {
+        Navigation.NavigateTo("/review");
+    }
+}

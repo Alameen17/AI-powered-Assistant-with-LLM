@@ -154,3 +154,25 @@ window.fileUploadHelper = {
         }
     }
 };
+
+// Simple function to trigger file input
+window.triggerFileInput = function(element) {
+    if (element) {
+        element.click();
+    }
+};
+
+// Function to download file
+window.downloadFile = function(filename, content, contentType) {
+    const a = document.createElement('a');
+    const blob = new Blob([content], { type: contentType });
+    const url = window.URL.createObjectURL(blob);
+
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+};

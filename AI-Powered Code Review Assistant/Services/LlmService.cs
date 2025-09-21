@@ -164,7 +164,7 @@ Provide a summary recommendation: Approve, Request Changes, or Needs Discussion.
     {
         if (_openAiClient == null)
         {
-            return "OpenAI API key not configured. Please set your API key using: dotnet run -- configure --openai-key YOUR_API_KEY";
+            return await GenerateDemoResponseAsync(prompt);
         }
 
         try
@@ -181,7 +181,80 @@ Provide a summary recommendation: Approve, Request Changes, or Needs Discussion.
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error calling OpenAI API");
-            return "Error occurred while analyzing code. Please check your OpenAI configuration.";
+            return "Error occurred while analyzing code. Please check your OpenAI configuration and try again.";
+        }
+    }
+
+    private async Task<string> GenerateDemoResponseAsync(string prompt)
+    {
+        // Simulate API delay for realistic demo experience
+        await Task.Delay(1500);
+
+        if (prompt.Contains("security", StringComparison.OrdinalIgnoreCase))
+        {
+            return @"## Security Analysis (Demo Mode)
+
+⚠️ **OpenAI API key not configured - showing demo response**
+
+### Security Issues Found:
+1. **Input Validation** (Medium): Ensure all user inputs are properly validated and sanitized
+2. **Authentication** (High): Review authentication mechanisms for potential bypass vulnerabilities
+3. **Data Exposure** (Low): Check for potential information disclosure in error messages
+
+### Recommendations:
+- Implement proper input validation using data annotations
+- Use parameterized queries to prevent SQL injection
+- Sanitize output to prevent XSS attacks
+- Review authentication and authorization logic
+
+*Configure your OpenAI API key in Settings to get real AI-powered analysis.*";
+        }
+        else if (prompt.Contains("quality", StringComparison.OrdinalIgnoreCase))
+        {
+            return @"## Code Quality Analysis (Demo Mode)
+
+⚠️ **OpenAI API key not configured - showing demo response**
+
+### Quality Assessment:
+- **Maintainability**: Good overall structure with room for improvement
+- **Complexity**: Some methods could be simplified
+- **Naming**: Generally follows conventions
+- **Documentation**: Could benefit from more inline comments
+
+### Suggestions:
+- Extract complex logic into separate methods
+- Add XML documentation comments
+- Consider using dependency injection for better testability
+- Implement proper error handling
+
+*Configure your OpenAI API key in Settings to get real AI-powered analysis.*";
+        }
+        else
+        {
+            return @"## Code Review (Demo Mode)
+
+⚠️ **OpenAI API key not configured - showing demo response**
+
+### General Assessment:
+The code structure appears well-organized with standard patterns. Here are some observations:
+
+**Positive Aspects:**
+- Clear method naming
+- Appropriate use of language features
+- Good separation of concerns
+
+**Areas for Improvement:**
+- Consider adding more comprehensive error handling
+- Add unit tests for critical functionality
+- Review performance implications of certain operations
+- Add logging for debugging purposes
+
+**Recommendations:**
+- Follow SOLID principles more strictly
+- Consider using async/await patterns where appropriate
+- Add input validation where needed
+
+*Configure your OpenAI API key in Settings to get real AI-powered analysis.*";
         }
     }
 }

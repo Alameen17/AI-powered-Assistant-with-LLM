@@ -229,6 +229,8 @@ public class CodeReviewService : ICodeReviewService
         try
         {
             var reviews = new List<Review>();
+            var fileCount = uploadedFiles.Count;
+            var processedCount = 0;
 
             foreach (var file in uploadedFiles)
             {
@@ -236,6 +238,8 @@ public class CodeReviewService : ICodeReviewService
                 {
                     continue;
                 }
+
+                _logger.LogInformation("Processing file {FileName} ({Progress}/{Total})", file.Key, ++processedCount, fileCount);
 
                 var review = await ReviewFileContentAsync(file.Key, file.Value, "Uploaded file review");
                 if (review != null)
@@ -327,7 +331,30 @@ public class CodeReviewService : ICodeReviewService
     {
         var issues = new List<Issue>();
 
-        if (analysis.Contains("Critical", StringComparison.OrdinalIgnoreCase))
+        // Check if this is a demo response
+        if (analysis.Contains("Demo Mode", StringComparison.OrdinalIgnoreCase))
+        {
+            issues.Add(new Issue
+            {
+                Title = "Input Validation Required",
+                Description = "Ensure all user inputs are properly validated and sanitized to prevent injection attacks",
+                Category = IssueCategory.Security,
+                Severity = Severity.Medium,
+                Rule = "OWASP A03:2021 - Injection",
+                LineNumber = null
+            });
+
+            issues.Add(new Issue
+            {
+                Title = "Authentication Review Needed",
+                Description = "Review authentication mechanisms for potential bypass vulnerabilities",
+                Category = IssueCategory.Security,
+                Severity = Severity.High,
+                Rule = "OWASP A07:2021 - Identification and Authentication Failures",
+                LineNumber = null
+            });
+        }
+        else if (analysis.Contains("Critical", StringComparison.OrdinalIgnoreCase))
         {
             issues.Add(new Issue
             {
