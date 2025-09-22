@@ -6,126 +6,543 @@
 
 <PageTitle>Review Results - AI Code Review</PageTitle>
 
-<div class="container py-5">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+
+@* Modern Results Page v6.0 - Forced Cache Refresh @DateTime.Now.ToString("HH:mm:ss") *@
+<script>
+    window.addEventListener('DOMContentLoaded', function() {
+        // Force remove any conflicting styles
+        const existingStyles = document.querySelectorAll('style');
+        existingStyles.forEach(style => {
+            if (style.textContent.includes('.card') && !style.textContent.includes('results-container')) {
+                style.remove();
+            }
+        });
+
+        // Force apply our modern styles
+        document.body.style.setProperty('background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'important');
+
+        // Wait a bit then force page styles
+        setTimeout(() => {
+            const resultsContainer = document.querySelector('.results-container');
+            if (resultsContainer) {
+                resultsContainer.style.setProperty('background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'important');
+                resultsContainer.style.setProperty('min-height', '100vh', 'important');
+            }
+        }, 100);
+    });
+</script>
+<style id="modern-results-style-@DateTime.Now.Ticks">
+    /* FORCED MODERN DESIGN - @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") */
+    .results-container {
+        min-height: 100vh !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        position: relative !important;
+        overflow-x: hidden !important;
+    }
+
+    .animated-bg {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background: repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 2px,
+            rgba(255,255,255,0.03) 2px,
+            rgba(255,255,255,0.03) 4px
+        ) !important;
+        animation: moveStripes 20s linear infinite !important;
+        z-index: 1 !important;
+    }
+
+    @@keyframes moveStripes {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(20px); }
+    }
+
+    .results-header {
+        background: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(15px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        border-radius: 25px !important;
+        padding: 2rem !important;
+        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.4) !important;
+        margin-bottom: 2rem !important;
+    }
+
+    .header-icon-wrapper {
+        width: 60px !important;
+        height: 60px !important;
+        background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1)) !important;
+        border-radius: 20px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        backdrop-filter: blur(10px) !important;
+        border: 1px solid rgba(255,255,255,0.3) !important;
+    }
+
+    .header-icon-wrapper i {
+        font-size: 1.8rem !important;
+        color: #fff !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+    }
+
+    .header-title {
+        color: #fff !important;
+        font-size: 2.5rem !important;
+        font-weight: 700 !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+        margin: 0 !important;
+    }
+
+    .header-subtitle {
+        color: rgba(255,255,255,0.9) !important;
+        font-size: 1.1rem !important;
+        font-weight: 500 !important;
+    }
+
+    .project-info {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 1.5rem !important;
+        margin-top: 1rem !important;
+    }
+
+    .info-item {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        background: rgba(255,255,255,0.1) !important;
+        padding: 0.5rem 1rem !important;
+        border-radius: 15px !important;
+        backdrop-filter: blur(5px) !important;
+        border: 1px solid rgba(255,255,255,0.2) !important;
+    }
+
+    .info-item i {
+        color: rgba(255,255,255,0.8) !important;
+        font-size: 0.9rem !important;
+    }
+
+    .info-item span {
+        color: #fff !important;
+        font-weight: 500 !important;
+        font-size: 0.9rem !important;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(15px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        border-radius: 20px !important;
+        padding: 2rem !important;
+        text-align: center !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37) !important;
+        height: 100% !important;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px) !important;
+        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.5) !important;
+    }
+
+    .stat-value {
+        font-size: 3rem !important;
+        font-weight: 800 !important;
+        margin-bottom: 0.5rem !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+    }
+
+    .stat-label {
+        color: rgba(255,255,255,0.9) !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    .content-card {
+        background: rgba(255, 255, 255, 0.1) !important;
+        backdrop-filter: blur(10px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37) !important;
+        overflow: hidden !important;
+        margin-bottom: 2rem !important;
+    }
+
+    .content-card .card-header {
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+        padding: 1.5rem !important;
+        border-radius: 0 !important;
+    }
+
+    .content-card .card-header h5 {
+        color: #fff !important;
+        font-weight: 700 !important;
+        margin: 0 !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+    }
+
+    .content-card .card-body {
+        padding: 2rem !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .loading-container {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 60vh !important;
+        color: #fff !important;
+    }
+
+    .text-white { color: #fff !important; }
+    .text-light { color: rgba(255,255,255,0.9) !important; }
+
+    /* Force button styles */
+    .btn-outline-light {
+        color: white !important;
+        border-color: rgba(255,255,255,0.5) !important;
+        background: rgba(255,255,255,0.1) !important;
+    }
+
+    .btn-outline-light:hover,
+    .btn-outline-light:focus,
+    .btn-outline-light.active,
+    .btn-check:checked + .btn-outline-light {
+        background: rgba(255,255,255,0.3) !important;
+        border-color: rgba(255,255,255,0.8) !important;
+        color: white !important;
+    }
+
+    /* Action buttons */
+    .action-btn {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        padding: 0.8rem 1.5rem !important;
+        border: none !important;
+        border-radius: 15px !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.3s ease !important;
+        backdrop-filter: blur(10px) !important;
+        border: 1px solid rgba(255,255,255,0.3) !important;
+        cursor: pointer !important;
+    }
+
+    .action-btn.primary {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+        color: #fff !important;
+        box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4) !important;
+    }
+
+    .action-btn.secondary {
+        background: rgba(255,255,255,0.2) !important;
+        color: #fff !important;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important;
+    }
+
+    /* Container spacing */
+    .container {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+    }
+
+    /* Section spacing */
+    .section-spacing {
+        margin-bottom: 3rem !important;
+    }
+
+    /* Row spacing */
+    .row {
+        margin-bottom: 2rem !important;
+    }
+
+    .row:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    /* Card body spacing */
+    .card-body > * {
+        margin-bottom: 1.5rem !important;
+    }
+
+    .card-body > *:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    /* File review item spacing */
+    .file-review-item {
+        margin-bottom: 2rem !important;
+        padding: 0 !important;
+        background: rgba(255,255,255,0.1) !important;
+        border: 1px solid rgba(255,255,255,0.2) !important;
+        border-radius: 20px !important;
+        backdrop-filter: blur(10px) !important;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37) !important;
+        overflow: hidden !important;
+    }
+
+    .file-review-header {
+        padding: 1.5rem !important;
+        background: rgba(255,255,255,0.1) !important;
+        border-bottom: 1px solid rgba(255,255,255,0.2) !important;
+    }
+
+    .file-review-content {
+        padding: 1.5rem !important;
+    }
+
+    .file-name {
+        color: #fff !important;
+        font-weight: 600 !important;
+        font-size: 1.1rem !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .file-badges {
+        display: flex !important;
+        gap: 0.5rem !important;
+        flex-wrap: wrap !important;
+    }
+
+    .file-badge {
+        padding: 0.4rem 1rem !important;
+        border-radius: 20px !important;
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    .expand-btn {
+        background: rgba(255,255,255,0.2) !important;
+        border: 1px solid rgba(255,255,255,0.3) !important;
+        color: white !important;
+        border-radius: 10px !important;
+        padding: 0.5rem 1rem !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .expand-btn:hover {
+        background: rgba(255,255,255,0.3) !important;
+        transform: translateY(-2px) !important;
+    }
+
+    .file-review-item:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    /* Issue and suggestion spacing */
+    .issue-item,
+    .suggestion-item {
+        margin-bottom: 1rem !important;
+        padding: 1rem !important;
+        border-radius: 10px !important;
+    }
+
+    .issue-item:last-child,
+    .suggestion-item:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    /* Top recommendations spacing */
+    .recommendation-item {
+        margin-bottom: 1.5rem !important;
+    }
+
+    .recommendation-item:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    /* Filter buttons styling */
+    .filter-buttons {
+        background: rgba(255,255,255,0.1) !important;
+        border-radius: 15px !important;
+        padding: 0.5rem !important;
+        backdrop-filter: blur(10px) !important;
+        border: 1px solid rgba(255,255,255,0.2) !important;
+    }
+
+    .filter-buttons .btn-outline-light {
+        border: none !important;
+        background: transparent !important;
+        color: rgba(255,255,255,0.8) !important;
+        border-radius: 10px !important;
+        padding: 0.5rem 1rem !important;
+        margin: 0 0.2rem !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .filter-buttons .btn-check:checked + .btn-outline-light {
+        background: rgba(255,255,255,0.3) !important;
+        color: white !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+    }
+
+    .filter-buttons .btn-outline-light:hover {
+        background: rgba(255,255,255,0.2) !important;
+        color: white !important;
+    }
+</style>
+
+<div class="results-container">
+    <!-- Animated Background -->
+    <div class="animated-bg"></div>
+
+    <div class="container py-5 position-relative" style="z-index: 2;">
     @if (reviewResult == null)
     {
-        <div class="text-center">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-3">Loading review results...</p>
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <h4 class="text-white mb-2">Loading Review Results</h4>
+            <p class="text-light">Please wait while we prepare your analysis...</p>
         </div>
     }
     else
     {
-        <!-- Header Section -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="fw-bold text-gradient">Review Results</h1>
-                <p class="text-muted mb-0">
-                    <i class="fas fa-folder me-2"></i>@reviewResult.RepoPath
-                    @if (!string.IsNullOrEmpty(reviewResult.CommitHash))
-                    {
-                        <span class="ms-3"><i class="fas fa-code-commit me-2"></i>@reviewResult.CommitHash.Substring(0, 8)</span>
-                    }
-                    <span class="ms-3"><i class="fas fa-clock me-2"></i>@reviewResult.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
-                    <span class="ms-3"><i class="fas fa-stopwatch me-2"></i>@reviewResult.Duration.TotalSeconds.ToString("F1")s</span>
-                </p>
-            </div>
-            <div>
-                <button class="btn btn-outline-secondary me-2" @onclick="ExportResults">
-                    <i class="fas fa-download me-2"></i>Export
-                </button>
-                <button class="btn btn-primary" @onclick="StartNewReview">
-                    <i class="fas fa-plus me-2"></i>New Review
-                </button>
+        <!-- Enhanced Header Section -->
+        <div class="results-header fade-in-down mb-5">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="header-icon-wrapper me-3">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div>
+                            <h1 class="header-title mb-1">Review Results</h1>
+                            <div class="header-subtitle">Analysis Complete • Ready for Review</div>
+                        </div>
+                    </div>
+
+                    <div class="project-info">
+                        <div class="info-item">
+                            <i class="fas fa-folder-open"></i>
+                            <span>@(reviewResult.RepoPath.Length > 50 ? "..." + reviewResult.RepoPath.Substring(reviewResult.RepoPath.Length - 47) : reviewResult.RepoPath)</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(reviewResult.CommitHash))
+                        {
+                            <div class="info-item">
+                                <i class="fas fa-code-commit"></i>
+                                <span>@reviewResult.CommitHash.Substring(0, Math.Min(8, reviewResult.CommitHash.Length))</span>
+                            </div>
+                        }
+                        <div class="info-item">
+                            <i class="fas fa-clock"></i>
+                            <span>@reviewResult.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-stopwatch"></i>
+                            <span>@reviewResult.Duration.TotalSeconds.ToString("F1")s</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="header-actions">
+                    <button class="action-btn secondary" @onclick="ExportResults">
+                        <i class="fas fa-download"></i>
+                        <span>Export</span>
+                    </button>
+                    <button class="action-btn primary" @onclick="StartNewReview">
+                        <i class="fas fa-plus"></i>
+                        <span>New Review</span>
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Summary Cards -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <div class="display-4 fw-bold text-primary">@reviewResult.Summary.TotalFiles</div>
-                        <div class="text-muted">Files Analyzed</div>
-                    </div>
+        <div class="row section-spacing fade-in-up">
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-value text-white">@reviewResult.Summary.TotalFiles</div>
+                    <div class="stat-label">Files Analyzed</div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <div class="display-4 fw-bold text-warning">@reviewResult.Summary.TotalIssues</div>
-                        <div class="text-muted">Total Issues</div>
-                    </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #ffd93d;">@reviewResult.Summary.TotalIssues</div>
+                    <div class="stat-label">Total Issues</div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <div class="display-4 fw-bold text-danger">@reviewResult.Summary.CriticalIssues</div>
-                        <div class="text-muted">Critical Issues</div>
-                    </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #ff6b6b;">@reviewResult.Summary.CriticalIssues</div>
+                    <div class="stat-label">Critical Issues</div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <div class="display-4 fw-bold @GetScoreColor(reviewResult.Summary.OverallScore)">@GetScoreGrade(reviewResult.Summary.OverallScore)</div>
-                        <div class="text-muted">Overall Score</div>
-                        <small class="text-muted">@reviewResult.Summary.OverallScore</small>
-                    </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-value" style="@GetScoreColor(reviewResult.Summary.OverallScore)">@GetScoreGrade(reviewResult.Summary.OverallScore)</div>
+                    <div class="stat-label">Overall Score</div>
+                    <small class="text-light mt-1 d-block">@reviewResult.Summary.OverallScore</small>
                 </div>
             </div>
         </div>
 
         <!-- Issues Breakdown -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light">
+        <div class="row section-spacing fade-in-up">
+            <div class="col-lg-6">
+                <div class="content-card">
+                    <div class="card-header">
                         <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Issues by Severity</h5>
                     </div>
                     <div class="card-body">
                         <div class="row text-center">
-                            <div class="col">
-                                <div class="fw-bold text-danger fs-4">@reviewResult.Summary.CriticalIssues</div>
-                                <small class="text-muted">Critical</small>
+                            <div class="col-6 col-md-3 mb-3">
+                                <div class="fw-bold fs-2 mb-2" style="color: #ff6b6b;">@reviewResult.Summary.CriticalIssues</div>
+                                <div class="text-light fw-semibold">Critical</div>
                             </div>
-                            <div class="col">
-                                <div class="fw-bold text-warning fs-4">@reviewResult.Summary.HighIssues</div>
-                                <small class="text-muted">High</small>
+                            <div class="col-6 col-md-3 mb-3">
+                                <div class="fw-bold fs-2 mb-2" style="color: #ffd93d;">@reviewResult.Summary.HighIssues</div>
+                                <div class="text-light fw-semibold">High</div>
                             </div>
-                            <div class="col">
-                                <div class="fw-bold text-info fs-4">@reviewResult.Summary.MediumIssues</div>
-                                <small class="text-muted">Medium</small>
+                            <div class="col-6 col-md-3 mb-3">
+                                <div class="fw-bold fs-2 mb-2" style="color: #4ecdc4;">@reviewResult.Summary.MediumIssues</div>
+                                <div class="text-light fw-semibold">Medium</div>
                             </div>
-                            <div class="col">
-                                <div class="fw-bold text-secondary fs-4">@reviewResult.Summary.LowIssues</div>
-                                <small class="text-muted">Low</small>
+                            <div class="col-6 col-md-3 mb-3">
+                                <div class="fw-bold fs-2 mb-2" style="color: #95a5a6;">@reviewResult.Summary.LowIssues</div>
+                                <div class="text-light fw-semibold">Low</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light">
+            <div class="col-lg-6">
+                <div class="content-card">
+                    <div class="card-header">
                         <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Issues by Category</h5>
                     </div>
                     <div class="card-body">
                         <div class="row text-center">
-                            <div class="col">
-                                <div class="fw-bold text-danger fs-4">@reviewResult.Summary.SecurityIssues</div>
-                                <small class="text-muted">Security</small>
+                            <div class="col-4 mb-3">
+                                <div class="fw-bold fs-2 mb-2" style="color: #ff6b6b;">@reviewResult.Summary.SecurityIssues</div>
+                                <div class="text-light fw-semibold">Security</div>
                             </div>
-                            <div class="col">
-                                <div class="fw-bold text-warning fs-4">@reviewResult.Summary.PerformanceIssues</div>
-                                <small class="text-muted">Performance</small>
+                            <div class="col-4 mb-3">
+                                <div class="fw-bold fs-2 mb-2" style="color: #ffd93d;">@reviewResult.Summary.PerformanceIssues</div>
+                                <div class="text-light fw-semibold">Performance</div>
                             </div>
-                            <div class="col">
-                                <div class="fw-bold text-info fs-4">@reviewResult.Summary.QualityIssues</div>
-                                <small class="text-muted">Quality</small>
+                            <div class="col-4 mb-3">
+                                <div class="fw-bold fs-2 mb-2" style="color: #4ecdc4;">@reviewResult.Summary.QualityIssues</div>
+                                <div class="text-light fw-semibold">Quality</div>
                             </div>
                         </div>
                     </div>
@@ -136,80 +553,90 @@
         <!-- Top Recommendations -->
         @if (reviewResult.Summary.TopRecommendations.Any())
         {
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-light">
+            <div class="content-card section-spacing fade-in-up">
+                <div class="card-header">
                     <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Top Recommendations</h5>
                 </div>
                 <div class="card-body">
-                    <ul class="list-unstyled mb-0">
+                    <div class="row">
                         @foreach (var recommendation in reviewResult.Summary.TopRecommendations)
                         {
-                            <li class="mb-2">
-                                <i class="fas fa-arrow-right text-primary me-2"></i>@recommendation
-                            </li>
+                            <div class="col-12 recommendation-item">
+                                <div class="d-flex align-items-start p-3 rounded-3" style="background: rgba(255,255,255,0.1); border-left: 4px solid #4facfe;">
+                                    <div class="me-3 mt-1">
+                                        <i class="fas fa-arrow-right" style="color: #4facfe;"></i>
+                                    </div>
+                                    <div class="text-white">@recommendation</div>
+                                </div>
+                            </div>
                         }
-                    </ul>
+                    </div>
                 </div>
             </div>
         }
 
         <!-- File Reviews -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <div class="content-card fade-in-up">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <h5 class="mb-0"><i class="fas fa-file-code me-2"></i>File Reviews (@reviewResult.Reviews.Count)</h5>
-                <div class="btn-group" role="group">
+                <div class="filter-buttons" role="group">
                     <input type="radio" class="btn-check" name="filter" id="all" @onchange='() => SetFilter("all")' checked="@(currentFilter == "all")">
-                    <label class="btn btn-outline-secondary btn-sm" for="all">All</label>
+                    <label class="btn btn-outline-light btn-sm" for="all">All</label>
 
                     <input type="radio" class="btn-check" name="filter" id="issues" @onchange='() => SetFilter("issues")' checked="@(currentFilter == "issues")">
-                    <label class="btn btn-outline-secondary btn-sm" for="issues">With Issues</label>
+                    <label class="btn btn-outline-light btn-sm" for="issues">With Issues</label>
 
                     <input type="radio" class="btn-check" name="filter" id="critical" @onchange='() => SetFilter("critical")' checked="@(currentFilter == "critical")">
-                    <label class="btn btn-outline-secondary btn-sm" for="critical">Critical</label>
+                    <label class="btn btn-outline-light btn-sm" for="critical">Critical</label>
                 </div>
             </div>
             <div class="card-body">
                 @foreach (var review in GetFilteredReviews())
                 {
-                    <div class="border rounded-3 mb-3 p-3">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div>
-                                <h6 class="fw-semibold mb-1">
-                                    <i class="fas fa-file-code me-2"></i>@review.FilePath
-                                </h6>
-                                <div class="d-flex gap-2">
-                                    <span class="badge @GetSeverityBadgeClass(review.Severity)">@review.Severity</span>
-                                    <span class="badge bg-light text-dark">@review.Type</span>
-                                    @if (review.Issues.Any())
-                                    {
-                                        <span class="badge bg-warning text-dark">@review.Issues.Count issue(s)</span>
-                                    }
+                    <div class="file-review-item">
+                        <div class="file-review-header">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="file-name">
+                                        <i class="fas fa-file-code me-2" style="color: #4facfe;"></i>@review.FilePath
+                                    </div>
+                                    <div class="file-badges">
+                                        <span class="file-badge" style="background: @GetSeverityColor(review.Severity); color: white;">@review.Severity</span>
+                                        <span class="file-badge" style="background: rgba(255,255,255,0.2); color: white;">@review.Type</span>
+                                        @if (review.Issues.Any())
+                                        {
+                                            <span class="file-badge" style="background: rgba(255, 193, 7, 0.8); color: white;">@review.Issues.Count issue(s)</span>
+                                        }
+                                    </div>
                                 </div>
+                                <button class="expand-btn" type="button" data-bs-toggle="collapse" data-bs-target="#review-@review.GetHashCode()">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
                             </div>
-                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#review-@review.GetHashCode()">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
                         </div>
 
                         <div class="collapse" id="review-@review.GetHashCode()">
+                            <div class="file-review-content">
                             @if (review.Issues.Any())
                             {
-                                <div class="mb-3">
-                                    <h6 class="fw-semibold text-danger">Issues Found:</h6>
+                                <div class="mb-4 mt-3">
+                                    <h6 class="fw-semibold text-white mb-3"><i class="fas fa-exclamation-triangle me-2" style="color: #ff6b6b;"></i>Issues Found:</h6>
                                     @foreach (var issue in review.Issues)
                                     {
-                                        <div class="alert alert-@GetSeverityAlertClass(issue.Severity) py-2">
+                                        <div class="issue-item" style="background: rgba(255,255,255,0.1); border-left: 4px solid @GetSeverityColor(issue.Severity);">
                                             <div class="d-flex justify-content-between align-items-start">
-                                                <div>
-                                                    <strong>@issue.Title</strong>
-                                                    @if (issue.LineNumber.HasValue)
-                                                    {
-                                                        <span class="badge bg-secondary ms-2">Line @issue.LineNumber</span>
-                                                    }
-                                                    <p class="mb-1 mt-1">@issue.Description</p>
+                                                <div class="flex-grow-1">
+                                                    <div class="d-flex align-items-center mb-2">
+                                                        <strong class="text-white me-2">@issue.Title</strong>
+                                                        @if (issue.LineNumber.HasValue)
+                                                        {
+                                                            <span class="badge px-2 py-1" style="background: rgba(255,255,255,0.2); color: white;">Line @issue.LineNumber</span>
+                                                        }
+                                                    </div>
+                                                    <p class="mb-2 text-light">@issue.Description</p>
                                                     <small class="text-muted">@issue.Rule</small>
                                                 </div>
-                                                <span class="badge @GetSeverityBadgeClass(issue.Severity)">@issue.Severity</span>
+                                                <span class="badge px-3 py-2" style="background: @GetSeverityColor(issue.Severity); color: white;">@issue.Severity</span>
                                             </div>
                                         </div>
                                     }
@@ -218,25 +645,28 @@
 
                             @if (review.Suggestions.Any())
                             {
-                                <div class="mb-3">
-                                    <h6 class="fw-semibold text-info">Suggestions:</h6>
+                                <div class="mb-4">
+                                    <h6 class="fw-semibold text-white mb-3"><i class="fas fa-lightbulb me-2" style="color: #4ecdc4;"></i>Suggestions:</h6>
                                     @foreach (var suggestion in review.Suggestions)
                                     {
-                                        <div class="alert alert-info py-2">
-                                            <strong>@suggestion.Title</strong>
-                                            <p class="mb-1 mt-1">@suggestion.Description</p>
+                                        <div class="suggestion-item" style="background: rgba(78, 205, 196, 0.1); border-left: 4px solid #4ecdc4;">
+                                            <strong class="text-white d-block mb-2">@suggestion.Title</strong>
+                                            <p class="mb-2 text-light">@suggestion.Description</p>
                                             @if (!string.IsNullOrEmpty(suggestion.RecommendedChange))
                                             {
-                                                <small class="text-muted"><strong>Recommended:</strong> @suggestion.RecommendedChange</small>
+                                                <div class="mt-2 p-2 rounded" style="background: rgba(255,255,255,0.1);">
+                                                    <small class="text-light"><strong>Recommended:</strong> @suggestion.RecommendedChange</small>
+                                                </div>
                                             }
                                         </div>
                                     }
                                 </div>
                             }
 
-                            <div class="bg-light rounded p-3">
-                                <h6 class="fw-semibold">AI Analysis:</h6>
-                                <div style="white-space: pre-wrap;">@review.ReviewText</div>
+                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
+                                <h6 class="fw-semibold text-white mb-3"><i class="fas fa-robot me-2" style="color: #4facfe;"></i>AI Analysis:</h6>
+                                <div class="text-light" style="white-space: pre-wrap; line-height: 1.6;">@review.ReviewText</div>
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -244,9 +674,12 @@
 
                 @if (!GetFilteredReviews().Any())
                 {
-                    <div class="text-center text-muted py-5">
-                        <i class="fas fa-search fa-3x mb-3"></i>
-                        <p>No reviews match the current filter.</p>
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-search" style="font-size: 3rem; color: rgba(255,255,255,0.6);"></i>
+                        </div>
+                        <h5 class="text-white mb-2">No Reviews Found</h5>
+                        <p class="text-light">No reviews match the current filter criteria.</p>
                     </div>
                 }
             </div>
@@ -300,11 +733,11 @@
 
     private string GetSeverityBadgeClass(Models.Severity severity) => severity switch
     {
-        Models.Severity.Critical => "bg-danger",
-        Models.Severity.High => "bg-warning",
-        Models.Severity.Medium => "bg-info",
-        Models.Severity.Low => "bg-secondary",
-        _ => "bg-light text-dark"
+        Models.Severity.Critical => "text-white",
+        Models.Severity.High => "text-white",
+        Models.Severity.Medium => "text-white",
+        Models.Severity.Low => "text-white",
+        _ => "text-white"
     };
 
     private string GetSeverityAlertClass(Models.Severity severity) => severity switch
@@ -318,11 +751,20 @@
 
     private string GetScoreColor(string score) => score switch
     {
-        var s when s.StartsWith("A") => "text-success",
-        var s when s.StartsWith("B") => "text-info",
-        var s when s.StartsWith("C") => "text-warning",
-        var s when s.StartsWith("D") => "text-orange",
-        _ => "text-danger"
+        var s when s.StartsWith("A") => "color: #4ecdc4;",
+        var s when s.StartsWith("B") => "color: #4facfe;",
+        var s when s.StartsWith("C") => "color: #ffd93d;",
+        var s when s.StartsWith("D") => "color: #ff9f43;",
+        _ => "color: #ff6b6b;"
+    };
+
+    private string GetSeverityColor(Models.Severity severity) => severity switch
+    {
+        Models.Severity.Critical => "#ff6b6b",
+        Models.Severity.High => "#ffd93d",
+        Models.Severity.Medium => "#4ecdc4",
+        Models.Severity.Low => "#95a5a6",
+        _ => "#ffffff"
     };
 
     private string GetScoreGrade(string score) => score.Split(' ')[0];
@@ -350,3 +792,5 @@
         Navigation.NavigateTo("/review");
     }
 }
+
+</div>

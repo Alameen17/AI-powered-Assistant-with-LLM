@@ -8,190 +8,1003 @@
 
 <PageTitle>AI Code Review</PageTitle>
 
-<div class="container py-5">
-    <div class="text-center mb-5">
-        <h1 class="fw-bold text-gradient">AI Code Review Assistant</h1>
-        <p class="text-muted fs-5">Intelligent analysis for security, quality, and maintainability</p>
-    </div>
-
-    <!-- Tabs for Input Selection -->
-    <div class="card shadow-lg border-0 rounded-4">
-        <div class="card-header bg-light border-0">
-            <ul class="nav nav-pills justify-content-center" role="tablist">
-                <li class="nav-item">
-                    <button class="nav-link @(activeTab == "repository" ? "active" : "")"
-                            @onclick='() => SetActiveTab("repository")'>
-                        <i class="fas fa-code-branch me-2"></i>Git Repository
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link @(activeTab == "files" ? "active" : "")"
-                            @onclick='() => SetActiveTab("files")'>
-                        <i class="fas fa-file-code me-2"></i>Upload Files
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link @(activeTab == "directory" ? "active" : "")"
-                            @onclick='() => SetActiveTab("directory")'>
-                        <i class="fas fa-folder me-2"></i>Local Directory
-                    </button>
-                </li>
-            </ul>
+<div class="review-container">
+    <!-- Animated Background -->
+    <div class="animated-bg"></div>
+    
+    <div class="container py-5 position-relative">
+        <!-- Enhanced Header -->
+        <div class="text-center mb-5 fade-in-down">
+            <h1 class="display-4 fw-bold text-white mb-3">
+                <i class="fas fa-rocket me-3"></i>AI Code Review Assistant
+            </h1>
+            <p class="lead text-white-50">Intelligent analysis for security, quality, and maintainability</p>
+            
+            <!-- Quick Stats -->
+            <div class="quick-stats mt-4">
+                <div class="stat-item">
+                    <span class="stat-number">@(totalFilesAnalyzed)</span>
+                    <span class="stat-label">Files Analyzed</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">@(issuesFound)</span>
+                    <span class="stat-label">Issues Found</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">@(timesSaved)h</span>
+                    <span class="stat-label">Time Saved</span>
+                </div>
+            </div>
         </div>
 
-        <div class="card-body p-4">
-            @if (!string.IsNullOrEmpty(errorMessage))
-            {
-                <div class="alert alert-danger" role="alert">
-                    <i class="fas fa-exclamation-triangle me-2"></i>@errorMessage
+        <!-- Progress Stepper -->
+        @if (showProgressStepper)
+        {
+            <div class="progress-stepper mb-4 fade-in">
+                <div class="step @(currentStep >= 1 ? "active" : "")">
+                    <div class="step-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <div class="step-label">Select Source</div>
                 </div>
-            }
-
-            @if (activeTab == "repository")
-            {
-                <EditForm Model="@reviewRequest" OnValidSubmit="@ReviewRepository">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Repository Path</label>
-                        <div class="input-group">
-                            <InputText class="form-control rounded-start"
-                                       @bind-value="reviewRequest.RepositoryPath"
-                                       placeholder="C:/path/to/repository"
-                                       disabled="@isProcessing" />
-                            <button type="button" class="btn btn-outline-secondary" @onclick="BrowseForRepository" disabled="@isProcessing">
-                                <i class="fas fa-folder-open"></i>
-                            </button>
-                        </div>
-                        <small class="text-muted">Enter the path to your Git repository</small>
+                <div class="step-connector @(currentStep >= 2 ? "active" : "")"></div>
+                <div class="step @(currentStep >= 2 ? "active" : "")">
+                    <div class="step-icon">
+                        <i class="fas fa-cog"></i>
                     </div>
+                    <div class="step-label">Configure</div>
+                </div>
+                <div class="step-connector @(currentStep >= 3 ? "active" : "")"></div>
+                <div class="step @(currentStep >= 3 ? "active" : "")">
+                    <div class="step-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="step-label">Analyze</div>
+                </div>
+            </div>
+        }
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Review Type</label>
-                            <InputSelect class="form-select" @bind-value="reviewRequest.ReviewType" disabled="@isProcessing">
-                                <option value="directory">Full Repository</option>
-                                <option value="commit">Specific Commit</option>
-                                <option value="changes">Uncommitted Changes</option>
-                            </InputSelect>
+        <!-- Main Card with Glass Effect -->
+        <div class="main-card glass-card fade-in-up">
+            <!-- Enhanced Tab Navigation -->
+            <div class="tab-navigation">
+                <div class="nav nav-pills" role="tablist">
+                    <button class="nav-link @(activeTab == "repository" ? "active" : "")"
+                            @onclick='() => SetActiveTab("repository")'
+                            disabled="@isProcessing">
+                        <div class="nav-link-content">
+                            <i class="fas fa-code-branch"></i>
+                            <span>Git Repository</span>
                         </div>
-                        <div class="col-md-6">
-                            @if (reviewRequest.ReviewType == "commit")
-                            {
-                                <label class="form-label fw-semibold">Commit Hash</label>
-                                <InputText class="form-control" @bind-value="reviewRequest.CommitHash"
-                                           placeholder="abc123..."
-                                           disabled="@isProcessing" />
-                            }
+                        <div class="nav-link-indicator"></div>
+                    </button>
+                    <button class="nav-link @(activeTab == "files" ? "active" : "")"
+                            @onclick='() => SetActiveTab("files")'
+                            disabled="@isProcessing">
+                        <div class="nav-link-content">
+                            <i class="fas fa-file-code"></i>
+                            <span>Upload Files</span>
+                        </div>
+                        <div class="nav-link-indicator"></div>
+                    </button>
+                    <button class="nav-link @(activeTab == "directory" ? "active" : "")"
+                            @onclick='() => SetActiveTab("directory")'
+                            disabled="@isProcessing">
+                        <div class="nav-link-content">
+                            <i class="fas fa-folder"></i>
+                            <span>Local Directory</span>
+                        </div>
+                        <div class="nav-link-indicator"></div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <!-- Enhanced Error Message -->
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show animated-alert" role="alert">
+                        <div class="d-flex align-items-center">
+                            <div class="alert-icon-wrapper">
+                                <i class="fas fa-exclamation-circle fa-2x"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <strong>Error:</strong> @errorMessage
+                            </div>
+                            <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
                         </div>
                     </div>
+                }
 
-                    <div class="d-grid mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg shadow" disabled="@isProcessing">
-                            @if (isProcessing)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                <span>Analyzing...</span>
-                            }
-                            else
-                            {
-                                <i class="fas fa-play me-2"></i>
-                                <span>Start Analysis</span>
-                            }
-                        </button>
+                <!-- Success Message -->
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="alert alert-success alert-dismissible fade show animated-alert" role="alert">
+                        <div class="d-flex align-items-center">
+                            <div class="alert-icon-wrapper">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                @successMessage
+                            </div>
+                            <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+                        </div>
                     </div>
-                </EditForm>
-            }
-            else if (activeTab == "files")
-            {
-                <div class="upload-zone text-center p-5 border rounded-4 bg-light position-relative">
-                    <InputFile @ref="fileInput" OnChange="OnFileSelected" multiple accept=".cs,.js,.ts,.py,.java,.cpp,.c,.h,.hpp,.html,.css,.jsx,.tsx,.php,.rb,.go,.rs,.swift,.kt,.scala,.sql,.xml,.json,.yaml,.yml" style="display: none;" disabled="@isProcessing" />
+                }
 
-                    @if (uploadedFiles.Any())
-                    {
-                        <div class="mb-3">
-                            <h6 class="fw-semibold">Selected Files:</h6>
-                            <div class="list-group list-group-flush">
-                                @foreach (var file in uploadedFiles.Keys)
+                <!-- Repository Tab Content -->
+                @if (activeTab == "repository")
+                {
+                    <EditForm Model="@reviewRequest" OnValidSubmit="@ReviewRepository">
+                        <div class="tab-content-animated">
+                            <div class="form-floating mb-4">
+                                <InputText class="form-control form-control-lg custom-input"
+                                           @bind-Value="reviewRequest.RepositoryPath"
+                                           placeholder="Repository Path"
+                                           disabled="@isProcessing"
+                                           id="repoPath" />
+                                <label for="repoPath">Repository Path</label>
+                                <button type="button" class="input-addon-btn" @onclick="BrowseForRepository" disabled="@isProcessing">
+                                    <i class="fas fa-folder-open"></i>
+                                </button>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <InputSelect class="form-select custom-select" @bind-Value="reviewRequest.ReviewType" 
+                                                     disabled="@isProcessing" id="reviewType">
+                                            <option value="directory">Full Repository</option>
+                                            <option value="commit">Specific Commit</option>
+                                            <option value="changes">Uncommitted Changes</option>
+                                        </InputSelect>
+                                        <label for="reviewType">Review Type</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    @if (reviewRequest.ReviewType == "commit")
+                                    {
+                                        <div class="form-floating">
+                                            <InputText class="form-control custom-input" @bind-Value="reviewRequest.CommitHash"
+                                                       placeholder="Commit Hash"
+                                                       disabled="@isProcessing"
+                                                       id="commitHash" />
+                                            <label for="commitHash">Commit Hash</label>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Advanced Options -->
+                            <div class="advanced-options mb-4">
+                                <button type="button" class="btn btn-link p-0" @onclick="ToggleAdvancedOptions">
+                                    <i class="fas fa-chevron-@(showAdvancedOptions ? "up" : "down") me-2"></i>
+                                    Advanced Options
+                                </button>
+                                @if (showAdvancedOptions)
                                 {
-                                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span><i class="fas fa-file-code me-2"></i>@file</span>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => RemoveFile(file)" disabled="@isProcessing">
-                                            <i class="fas fa-times"></i>
-                                        </button>
+                                    <div class="mt-3 p-3 border rounded-3 bg-light">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" @bind="includeTests" id="includeTests">
+                                            <label class="form-check-label" for="includeTests">
+                                                Include test files
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" @bind="deepAnalysis" id="deepAnalysis">
+                                            <label class="form-check-label" for="deepAnalysis">
+                                                Deep analysis (takes longer)
+                                            </label>
+                                        </div>
                                     </div>
                                 }
                             </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg custom-btn" disabled="@isProcessing">
+                                    @if (isProcessing)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        <span>Analyzing...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-play me-2"></i>
+                                        <span>Start Analysis</span>
+                                    }
+                                </button>
+                            </div>
                         </div>
-                    }
+                    </EditForm>
+                }
+                else if (activeTab == "files")
+                {
+                    <div class="tab-content-animated">
+                        <div class="upload-zone @(isDragging ? "drag-active" : "")"
+                             @ondragenter="HandleDragEnter"
+                             @ondragleave="HandleDragLeave"
+                             @ondragover="HandleDragOver"
+                             @ondragover:preventDefault="true"
+                             @ondrop="HandleDrop"
+                             @ondrop:preventDefault="true">
+                            
+                            <InputFile @ref="fileInput" OnChange="OnFileSelected" multiple 
+                                       accept=".cs,.js,.ts,.py,.java,.cpp,.c,.h,.hpp,.html,.css,.jsx,.tsx,.php,.rb,.go,.rs,.swift,.kt,.scala,.sql,.xml,.json,.yaml,.yml" 
+                                       style="display: none;" disabled="@isProcessing" />
 
-                    <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
-                    <h5 class="fw-semibold">Upload Code Files</h5>
-                    <p class="text-muted">Drag & drop files here or click to browse</p>
-
-                    <div class="d-flex flex-column gap-2">
-                        <button type="button" class="btn btn-primary" @onclick="TriggerFileInput" disabled="@isProcessing">
-                            <i class="fas fa-file-plus me-2"></i>Choose Files
-                        </button>
+                            <div class="upload-icon-wrapper">
+                                <i class="fas fa-cloud-upload-alt fa-3x"></i>
+                            </div>
+                            <h4 class="fw-bold mb-2">Drop your files here</h4>
+                            <p class="text-muted mb-4">or click to browse</p>
+                            
+                            <button type="button" class="btn btn-outline-primary btn-lg" @onclick="TriggerFileInput" disabled="@isProcessing">
+                                <i class="fas fa-file-plus me-2"></i>Choose Files
+                            </button>
+                            
+                            <div class="supported-formats mt-3">
+                                <small class="text-muted">
+                                    Supported: .cs, .js, .ts, .py, .java, .cpp, .html, .css, and more
+                                </small>
+                            </div>
+                        </div>
 
                         @if (uploadedFiles.Any())
                         {
-                            <button type="button" class="btn btn-success btn-lg" @onclick="ReviewUploadedFiles" disabled="@isProcessing">
-                                @if (isProcessing)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    <span>Analyzing...</span>
-                                }
-                                else
-                                {
-                                    <i class="fas fa-play me-2"></i>
-                                    <span>Analyze Files (@uploadedFiles.Count)</span>
-                                }
-                            </button>
+                            <div class="file-list-container mt-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="mb-0">Selected Files (@uploadedFiles.Count)</h5>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="ClearAllFiles">
+                                        <i class="fas fa-trash me-1"></i>Clear All
+                                    </button>
+                                </div>
+                                <div class="file-list">
+                                    @foreach (var file in uploadedFiles.Keys)
+                                    {
+                                        <div class="file-item">
+                                            <div class="file-info">
+                                                <i class="fas fa-file-code me-2 text-primary"></i>
+                                                <span class="file-name">@file</span>
+                                                <span class="file-size text-muted ms-2">@GetFileSize(file)</span>
+                                            </div>
+                                            <button type="button" class="btn btn-sm btn-ghost" @onclick="() => RemoveFile(file)" disabled="@isProcessing">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="d-grid mt-4">
+                                <button type="button" class="btn btn-success btn-lg custom-btn" @onclick="ReviewUploadedFiles" disabled="@isProcessing">
+                                    @if (isProcessing)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        <span>Analyzing...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-play me-2"></i>
+                                        <span>Analyze @uploadedFiles.Count Files</span>
+                                    }
+                                </button>
+                            </div>
                         }
                     </div>
-                </div>
-            }
-            else if (activeTab == "directory")
-            {
-                <EditForm Model="@reviewRequest" OnValidSubmit="@ReviewDirectory">
-                    <label class="form-label fw-semibold">Directory Path</label>
-                    <div class="input-group">
-                        <InputText class="form-control" @bind-value="reviewRequest.DirectoryPath"
-                                   placeholder="C:/path/to/project"
-                                   disabled="@isProcessing" />
-                        <button type="button" class="btn btn-outline-secondary" @onclick="BrowseForDirectory" disabled="@isProcessing">
-                            <i class="fas fa-folder-open"></i>
-                        </button>
+                }
+                else if (activeTab == "directory")
+                {
+                    <EditForm Model="@reviewRequest" OnValidSubmit="@ReviewDirectory">
+                        <div class="tab-content-animated">
+                            <div class="form-floating mb-4">
+                                <InputText class="form-control form-control-lg custom-input" 
+                                           @bind-Value="reviewRequest.DirectoryPath"
+                                           placeholder="Directory Path"
+                                           disabled="@isProcessing"
+                                           id="dirPath" />
+                                <label for="dirPath">Directory Path</label>
+                                <button type="button" class="input-addon-btn" @onclick="BrowseForDirectory" disabled="@isProcessing">
+                                    <i class="fas fa-folder-open"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="path-suggestions">
+                                <small class="text-muted">Recent paths:</small>
+                                <div class="suggestions-list">
+                                    @foreach (var path in recentPaths)
+                                    {
+                                        <button type="button" class="suggestion-chip" @onclick="() => SelectRecentPath(path)">
+                                            @path
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="d-grid mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg custom-btn" disabled="@isProcessing">
+                                    @if (isProcessing)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        <span>Analyzing...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-search me-2"></i>
+                                        <span>Analyze Directory</span>
+                                    }
+                                </button>
+                            </div>
+                        </div>
+                    </EditForm>
+                }
+
+                <!-- Analysis Progress -->
+                @if (isProcessing && showProgressDetails)
+                {
+                    <div class="analysis-progress mt-4">
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" 
+                                 style="width: @($"{progressPercentage}%")"
+                                 aria-valuenow="@progressPercentage" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                @progressPercentage%
+                            </div>
+                        </div>
+                        <div class="analysis-status text-center">
+                            <p class="mb-2">
+                                <i class="fas fa-spinner fa-spin me-2"></i>
+                                <span>@currentAnalysisStep</span>
+                            </p>
+                            <small class="text-muted">@analyzedFilesCount of @totalFilesCount files processed</small>
+                        </div>
                     </div>
-                    <small class="text-muted">Enter the path to a directory containing code files</small>
-                    <div class="d-grid mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg shadow" disabled="@isProcessing">
-                            @if (isProcessing)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                <span>Analyzing...</span>
-                            }
-                            else
-                            {
-                                <i class="fas fa-search me-2"></i>
-                                <span>Analyze Directory</span>
-                            }
-                        </button>
-                    </div>
-                </EditForm>
-            }
+                }
+            </div>
+        </div>
+
+        <!-- Quick Actions Bar -->
+        <div class="quick-actions-bar mt-5 pt-3">
+            <button class="quick-action" @onclick="LoadSampleProject" title="Load sample project">
+                <i class="fas fa-magic"></i>
+                <span>Try Sample</span>
+            </button>
+            <button class="quick-action" @onclick="ShowRecentProjects" title="Recent projects">
+                <i class="fas fa-history"></i>
+                <span>Recent</span>
+            </button>
+            <button class="quick-action" @onclick="ShowKeyboardShortcuts" title="Keyboard shortcuts">
+                <i class="fas fa-keyboard"></i>
+                <span>Shortcuts</span>
+            </button>
+            <button class="quick-action" @onclick="ShowHelp" title="Help">
+                <i class="fas fa-question-circle"></i>
+                <span>Help</span>
+            </button>
         </div>
     </div>
 </div>
+
+<style>
+    /* Updated: 2025-09-21 21:41 - Force browser refresh */
+    .review-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .animated-bg {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0.1;
+        background-image: 
+            repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px);
+        animation: backgroundScroll 20s linear infinite;
+    }
+
+    @@keyframes backgroundScroll {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(70px); }
+    }
+
+    /* Glass Card Effect */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* Enhanced Tab Navigation */
+    .tab-navigation {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 1.5rem;
+        margin-bottom: 0;
+    }
+
+    .nav-pills {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .nav-link {
+        background: rgba(255, 255, 255, 0.15);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        border-radius: 15px;
+        padding: 1rem 2rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        min-width: 150px;
+        text-align: center;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-link:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .nav-link.active {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+        color: white !important;
+        border-color: rgba(255, 255, 255, 0.5) !important;
+        box-shadow: 0 10px 30px rgba(79, 172, 254, 0.4);
+        transform: translateY(-2px);
+        font-weight: 700;
+    }
+
+    .nav-link-content {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .nav-link-content i {
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .nav-link-content span {
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .nav-link-indicator {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        height: 3px;
+        background: white;
+        transform: translateX(-50%);
+        transition: width 0.3s ease;
+    }
+
+    .nav-link.active .nav-link-indicator {
+        width: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    /* Progress Stepper */
+    .progress-stepper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+    }
+
+    .step-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .step.active .step-icon {
+        background: white;
+        color: #667eea;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .step-label {
+        margin-top: 0.5rem;
+        color: white;
+        font-weight: 500;
+        opacity: 0.8;
+    }
+
+    .step.active .step-label {
+        opacity: 1;
+    }
+
+    .step-connector {
+        width: 100px;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.2);
+        position: relative;
+    }
+
+    .step-connector.active {
+        background: white;
+    }
+
+    /* Quick Stats */
+    .quick-stats {
+        display: flex;
+        justify-content: center;
+        gap: 3rem;
+        margin-top: 2rem;
+    }
+
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: white;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.8);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Form Enhancements */
+    .custom-input, .custom-select {
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .custom-input:focus, .custom-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-floating > .custom-input {
+        padding-right: 50px;
+    }
+
+    .input-addon-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .input-addon-btn:hover:not(:disabled) {
+        transform: translateY(-50%) scale(1.05);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Upload Zone */
+    .upload-zone {
+        border: 3px dashed #cbd5e0;
+        border-radius: 20px;
+        padding: 3rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+        cursor: pointer;
+    }
+
+    .upload-zone:hover, .upload-zone.drag-active {
+        border-color: #667eea;
+        background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+        transform: scale(1.02);
+    }
+
+    .upload-icon-wrapper {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
+        }
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 20px rgba(102, 126, 234, 0);
+        }
+    }
+
+    /* File List */
+    .file-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .file-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .file-item:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        transform: translateX(5px);
+    }
+
+    .file-info {
+        display: flex;
+        align-items: center;
+    }
+
+    .file-name {
+        font-weight: 500;
+        color: #2d3748;
+    }
+
+    .file-size {
+        font-size: 0.875rem;
+    }
+
+    /* Custom Button */
+    .custom-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 1rem 2rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .custom-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.2);
+        transition: left 0.5s ease;
+    }
+
+    .custom-btn:hover::before {
+        left: 100%;
+    }
+
+    .custom-btn:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+    }
+
+    /* Quick Actions */
+    .quick-actions-bar {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-top: 2rem;
+        padding-top: 1rem;
+    }
+
+    .quick-action {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .quick-action:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Animations */
+    .fade-in-down {
+        animation: fadeInDown 0.8s ease;
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 0.8s ease;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.8s ease;
+    }
+
+    @@keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .animated-alert {
+        animation: shake 0.5s;
+    }
+
+    @@keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+
+    .tab-content-animated {
+        animation: fadeIn 0.5s ease;
+    }
+
+    /* Path Suggestions */
+    .path-suggestions {
+        margin-top: 1rem;
+    }
+
+    .suggestions-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .suggestion-chip {
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        color: #4a5568;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .suggestion-chip:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Advanced Options */
+    .advanced-options {
+        transition: all 0.3s ease;
+    }
+
+    /* Analysis Progress */
+    .analysis-progress {
+        background: #f7fafc;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-top: 1.5rem;
+    }
+
+    .analysis-status {
+        color: #4a5568;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .nav-pills {
+            flex-direction: column;
+        }
+        
+        .nav-link {
+            width: 100%;
+        }
+        
+        .quick-stats {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .progress-stepper {
+            flex-direction: column;
+        }
+        
+        .step-connector {
+            width: 3px;
+            height: 50px;
+        }
+        
+        .quick-actions-bar {
+            flex-wrap: wrap;
+        }
+    }
+
+    /* Ghost Button */
+    .btn-ghost {
+        background: transparent;
+        border: none;
+        color: #e53e3e;
+        transition: all 0.2s ease;
+    }
+
+    .btn-ghost:hover {
+        background: #fed7d7;
+        border-radius: 6px;
+    }
+</style>
 
 @code {
     private ReviewRequest reviewRequest = new();
     private string activeTab = "repository";
     private bool isProcessing = false;
     private string? errorMessage;
+    private string? successMessage;
     private InputFile? fileInput;
     private Dictionary<string, string> uploadedFiles = new();
+    
+    // UI State
+    private bool isDragging = false;
+    private bool showAdvancedOptions = false;
+    private bool showProgressStepper = true;
+    private bool showProgressDetails = false;
+    private int currentStep = 1;
+    
+    // Progress Tracking
+    private int progressPercentage = 0;
+    private string currentAnalysisStep = "Initializing...";
+    private int analyzedFilesCount = 0;
+    private int totalFilesCount = 0;
+    
+    // Stats (would be loaded from a service)
+    private int totalFilesAnalyzed = 1247;
+    private int issuesFound = 89;
+    private int timesSaved = 42;
+    
+    // Advanced Options
+    private bool includeTests = true;
+    private bool deepAnalysis = false;
+    
+    // Recent Paths (would be loaded from local storage)
+    private List<string> recentPaths = new()
+    {
+        "C:/Projects/MyApp",
+        "C:/Source/WebAPI",
+        "D:/Development/Frontend"
+    };
 
-    private void SetActiveTab(string tab) => activeTab = tab;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Load user preferences and recent paths from local storage
+            await LoadUserPreferences();
+
+            // Set up keyboard shortcuts
+            await SetupKeyboardShortcuts();
+        }
+    }
+
+    private async Task LoadUserPreferences()
+    {
+        try
+        {
+            var preferences = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userPreferences");
+            if (!string.IsNullOrEmpty(preferences))
+            {
+                // Parse and apply preferences
+                var paths = System.Text.Json.JsonSerializer.Deserialize<List<string>>(preferences);
+                if (paths != null)
+                {
+                    recentPaths = paths;
+                    StateHasChanged();
+                }
+            }
+        }
+        catch
+        {
+            // Handle error silently
+        }
+    }
+
+    private async Task SetupKeyboardShortcuts()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("setupKeyboardShortcuts");
+        }
+        catch
+        {
+            // Handle error silently
+        }
+    }
+
+    private void SetActiveTab(string tab)
+    {
+        activeTab = tab;
+        currentStep = 1;
+        errorMessage = null;
+        successMessage = null;
+    }
+
+    private void ToggleAdvancedOptions()
+    {
+        showAdvancedOptions = !showAdvancedOptions;
+    }
 
     private async Task ReviewRepository()
     {
@@ -201,12 +1014,18 @@
             return;
         }
 
+        currentStep = 3;
         isProcessing = true;
+        showProgressDetails = true;
         errorMessage = null;
+        progressPercentage = 0;
         StateHasChanged();
 
         try
         {
+            // Simulate progress updates
+            await SimulateProgress();
+            
             ReviewResult result;
 
             switch (reviewRequest.ReviewType)
@@ -220,7 +1039,6 @@
                     result = await CodeReviewService.ReviewCommitAsync(reviewRequest.RepositoryPath, reviewRequest.CommitHash);
                     break;
                 case "changes":
-                    // For uncommitted changes, we'll review the directory
                     result = await CodeReviewService.ReviewDirectoryAsync(reviewRequest.RepositoryPath);
                     break;
                 default:
@@ -228,16 +1046,28 @@
                     break;
             }
 
+            // Save to recent paths
+            await SaveToRecentPaths(reviewRequest.RepositoryPath);
+            
+            // Update stats
+            UpdateStats(result);
+            
+            successMessage = "Analysis completed successfully!";
+            await Task.Delay(1000);
+            
             // Navigate to results page with the result
             await NavigateToResults(result);
         }
         catch (Exception ex)
         {
             errorMessage = $"Error during review: {ex.Message}";
+            currentStep = 1;
         }
         finally
         {
             isProcessing = false;
+            showProgressDetails = false;
+            progressPercentage = 0;
             StateHasChanged();
         }
     }
@@ -250,23 +1080,57 @@
             return;
         }
 
+        currentStep = 3;
         isProcessing = true;
+        showProgressDetails = true;
         errorMessage = null;
         StateHasChanged();
 
         try
         {
+            await SimulateProgress();
+            
             var result = await CodeReviewService.ReviewDirectoryAsync(reviewRequest.DirectoryPath);
+            
+            await SaveToRecentPaths(reviewRequest.DirectoryPath);
+            UpdateStats(result);
+            
+            successMessage = "Directory analysis completed!";
+            await Task.Delay(1000);
+            
             await NavigateToResults(result);
         }
         catch (Exception ex)
         {
             errorMessage = $"Error during review: {ex.Message}";
+            currentStep = 1;
         }
         finally
         {
             isProcessing = false;
+            showProgressDetails = false;
             StateHasChanged();
+        }
+    }
+
+    private async Task SimulateProgress()
+    {
+        var steps = new[]
+        {
+            "Scanning repository structure...",
+            "Analyzing code patterns...",
+            "Checking security vulnerabilities...",
+            "Evaluating code quality...",
+            "Generating recommendations..."
+        };
+
+        foreach (var step in steps)
+        {
+            currentAnalysisStep = step;
+            progressPercentage += 20;
+            analyzedFilesCount = (int)(totalFilesCount * (progressPercentage / 100.0));
+            StateHasChanged();
+            await Task.Delay(500); // Simulate processing time
         }
     }
 
@@ -278,6 +1142,7 @@
             if (!string.IsNullOrEmpty(selectedPath))
             {
                 reviewRequest.RepositoryPath = selectedPath;
+                currentStep = 2;
                 StateHasChanged();
             }
         }
@@ -295,6 +1160,7 @@
             if (!string.IsNullOrEmpty(selectedPath))
             {
                 reviewRequest.DirectoryPath = selectedPath;
+                currentStep = 2;
                 StateHasChanged();
             }
         }
@@ -304,9 +1170,46 @@
         }
     }
 
-    private async Task NavigateToResults(ReviewResult result)
+    private void SelectRecentPath(string path)
     {
-        // Store the result in session state or pass it to the results page
+        reviewRequest.DirectoryPath = path;
+        currentStep = 2;
+    }
+
+    private async Task SaveToRecentPaths(string path)
+    {
+        if (!recentPaths.Contains(path))
+        {
+            recentPaths.Insert(0, path);
+            if (recentPaths.Count > 5)
+            {
+                recentPaths.RemoveAt(recentPaths.Count - 1);
+            }
+
+            // Save to local storage
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("localStorage.setItem", "recentPaths",
+                    System.Text.Json.JsonSerializer.Serialize(recentPaths));
+            }
+            catch
+            {
+                // Handle error silently
+            }
+        }
+    }
+
+    private void UpdateStats(Models.ReviewResult result)
+    {
+        // Update statistics based on the review result
+        totalFilesAnalyzed += result.Reviews?.Count ?? 0;
+        issuesFound += result.Summary?.TotalIssues ?? 0;
+        timesSaved += 2; // Estimate time saved
+    }
+
+    private async Task NavigateToResults(Models.ReviewResult result)
+    {
+        // Store the result in session state
         var resultJson = System.Text.Json.JsonSerializer.Serialize(result);
         await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "reviewResult", resultJson);
 
@@ -314,6 +1217,7 @@
         Navigation.NavigateTo("/results");
     }
 
+    // File Upload Methods
     private async Task TriggerFileInput()
     {
         if (fileInput?.Element != null)
@@ -345,6 +1249,7 @@
                 uploadedFiles[file.Name] = content;
             }
 
+            currentStep = 2;
             StateHasChanged();
         }
         catch (Exception ex)
@@ -356,7 +1261,30 @@
     private void RemoveFile(string fileName)
     {
         uploadedFiles.Remove(fileName);
+        if (!uploadedFiles.Any())
+        {
+            currentStep = 1;
+        }
         StateHasChanged();
+    }
+
+    private void ClearAllFiles()
+    {
+        uploadedFiles.Clear();
+        currentStep = 1;
+        StateHasChanged();
+    }
+
+    private string GetFileSize(string fileName)
+    {
+        if (uploadedFiles.TryGetValue(fileName, out var content))
+        {
+            var bytes = content.Length;
+            if (bytes < 1024) return $"{bytes} B";
+            if (bytes < 1024 * 1024) return $"{bytes / 1024:F1} KB";
+            return $"{bytes / (1024 * 1024):F1} MB";
+        }
+        return "";
     }
 
     private async Task ReviewUploadedFiles()
@@ -367,24 +1295,88 @@
             return;
         }
 
+        currentStep = 3;
         isProcessing = true;
+        showProgressDetails = true;
         errorMessage = null;
+        totalFilesCount = uploadedFiles.Count;
         StateHasChanged();
 
         try
         {
+            await SimulateProgress();
+            
             var result = await CodeReviewService.ReviewFilesAsync(uploadedFiles);
+            
+            UpdateStats(result);
+            successMessage = $"Successfully analyzed {uploadedFiles.Count} files!";
+            await Task.Delay(1000);
+            
             await NavigateToResults(result);
         }
         catch (Exception ex)
         {
             errorMessage = $"Error during review: {ex.Message}";
+            currentStep = 2;
         }
         finally
         {
             isProcessing = false;
+            showProgressDetails = false;
             StateHasChanged();
         }
+    }
+
+    // Drag and Drop Handlers
+    private void HandleDragEnter()
+    {
+        isDragging = true;
+    }
+
+    private void HandleDragLeave()
+    {
+        isDragging = false;
+    }
+
+    private void HandleDragOver(DragEventArgs e)
+    {
+        e.DataTransfer.DropEffect = "copy";
+    }
+
+    private async Task HandleDrop(DragEventArgs e)
+    {
+        isDragging = false;
+        
+        // Note: Blazor doesn't have direct access to dropped files
+        // This would need JavaScript interop in a real implementation
+        await JSRuntime.InvokeVoidAsync("handleFileDrop", e);
+    }
+
+    // Quick Action Methods
+    private async Task LoadSampleProject()
+    {
+        reviewRequest.RepositoryPath = "https://github.com/sample/demo-project";
+        activeTab = "repository";
+        currentStep = 2;
+        successMessage = "Sample project loaded. Click 'Start Analysis' to begin.";
+        StateHasChanged();
+    }
+
+    private void ShowRecentProjects()
+    {
+        // Could open a modal with recent projects
+        activeTab = "directory";
+        StateHasChanged();
+    }
+
+    private async Task ShowKeyboardShortcuts()
+    {
+        await JSRuntime.InvokeVoidAsync("showKeyboardShortcuts");
+    }
+
+    private async Task ShowHelp()
+    {
+        await JSRuntime.InvokeVoidAsync("window.open", "https://docs.yourapp.com/help", "_blank");
     }
 
     public class ReviewRequest
@@ -394,4 +1386,5 @@
         public string ReviewType { get; set; } = "directory";
         public string CommitHash { get; set; } = "";
     }
+
 }

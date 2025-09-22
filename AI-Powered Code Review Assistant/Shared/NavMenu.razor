@@ -1,34 +1,50 @@
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">
-            <i class="fas fa-code-branch"></i> Code Review
-        </a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+<div class="modern-nav-header">
+    <div class="nav-brand">
+        <div class="brand-icon">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="brand-text">
+            <div class="brand-title">AI Code Review</div>
+            <div class="brand-subtitle">Assistant</div>
+        </div>
     </div>
+    <button title="Navigation menu" class="nav-toggle" @onclick="ToggleNavMenu">
+        <i class="fas fa-bars"></i>
+    </button>
 </div>
 
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Dashboard
+<div class="@NavMenuCssClass modern-nav-menu" @onclick="ToggleNavMenu">
+    <nav class="nav-links">
+        <div class="nav-item">
+            <NavLink class="modern-nav-link" href="" Match="NavLinkMatch.All">
+                <div class="nav-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <span class="nav-text">Dashboard</span>
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="review">
-                <span class="oi oi-magnifying-glass" aria-hidden="true"></span> Code Review
+        <div class="nav-item">
+            <NavLink class="modern-nav-link" href="review">
+                <div class="nav-icon">
+                    <i class="fas fa-code"></i>
+                </div>
+                <span class="nav-text">Code Review</span>
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="history">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Review History
+        <div class="nav-item">
+            <NavLink class="modern-nav-link" href="history">
+                <div class="nav-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+                <span class="nav-text">Review History</span>
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="settings">
-                <span class="oi oi-cog" aria-hidden="true"></span> Settings
+        <div class="nav-item">
+            <NavLink class="modern-nav-link" href="settings">
+                <div class="nav-icon">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <span class="nav-text">Settings</span>
             </NavLink>
         </div>
     </nav>
