@@ -4,11 +4,7 @@
 
 <PageTitle>Settings - AI Code Review Assistant</PageTitle>
 
-<div class="page-content">
-    <!-- Animated Background -->
-    <div class="animated-bg"></div>
-
-    <div class="container-fluid position-relative" style="z-index: 2;">
+<div class="container-fluid">
     <div class="row mb-4">
         <div class="col-12">
             <h1>
@@ -251,42 +247,7 @@
             </div>
         </div>
     </div>
-    </div>
 </div>
-
-<style>
-    .page-content {
-        /* Inheriting from app.css */
-    }
-
-    .animated-bg {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        opacity: 0.1;
-        background-image:
-            repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px);
-        animation: backgroundScroll 20s linear infinite;
-    }
-
-    @@keyframes backgroundScroll {
-        0% { transform: translateX(0); }
-        100% { transform: translateX(70px); }
-    }
-
-    h1 {
-        color: white !important;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-
-    .text-muted {
-        color: rgba(255,255,255,0.8) !important;
-    }
-
-    .text-primary {
-        color: #4facfe !important;
-    }
-</style>
 
 @if (!string.IsNullOrEmpty(message))
 {

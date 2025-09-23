@@ -6,41 +6,40 @@
 <PageTitle>Review History - AI Code Review</PageTitle>
 
 <div class="page-content">
-    <!-- Animated Background -->
-    <div class="animated-bg"></div>
-
-    <div class="container py-5 position-relative">
-        <!-- Enhanced Header -->
-        <div class="text-center mb-5 fade-in-down">
-            <h1 class="display-4 fw-bold text-white mb-3">
-                <i class="fas fa-history me-3"></i>Review History
+    <div class="container">
+        <!-- Premium Header -->
+        <div class="text-center section-spacing fade-in-down">
+            <h1 class="display-4 fw-bold text-white mb-4">
+                <i class="fas fa-history me-3 float"></i>Review History
             </h1>
-            <p class="lead text-white-50">Track your code analysis progress and insights</p>
+            <p class="lead text-white-50 mb-5" style="font-size: 1.25rem; max-width: 500px; margin: 0 auto;">
+                Track your code analysis progress and discover insights from past reviews
+            </p>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="row section-spacing fade-in-up">
-            <div class="col-lg-3 col-md-6">
+        <!-- Premium Stats Cards -->
+        <div class="row g-4 section-spacing fade-in-up">
+            <div class="col-lg-3 col-md-6 stagger-1">
                 <div class="stat-card">
-                    <div class="stat-value text-white">@totalReviews</div>
+                    <div class="stat-value" style="color: #4facfe;">@totalReviews</div>
                     <div class="stat-label">Total Reviews</div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-3 col-md-6 stagger-2">
                 <div class="stat-card">
-                    <div class="stat-value" style="color: #4ecdc4;">@avgScore</div>
+                    <div class="stat-value" style="color: #10b981;">@avgScore</div>
                     <div class="stat-label">Average Score</div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-3 col-md-6 stagger-3">
                 <div class="stat-card">
-                    <div class="stat-value" style="color: #ffd93d;">@issuesFixed</div>
+                    <div class="stat-value" style="color: #f59e0b;">@issuesFixed</div>
                     <div class="stat-label">Issues Fixed</div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-3 col-md-6 stagger-4">
                 <div class="stat-card">
-                    <div class="stat-value" style="color: #4facfe;">@timeSaved</div>
+                    <div class="stat-value" style="color: #06b6d4;">@timeSaved</div>
                     <div class="stat-label">Hours Saved</div>
                 </div>
             </div>
@@ -164,241 +163,6 @@
         </div>
     </div>
 </div>
-
-<style>
-    .page-content {
-        /* Inheriting from app.css */
-    }
-
-    .animated-bg {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        opacity: 0.1;
-        background-image:
-            repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px);
-        animation: backgroundScroll 20s linear infinite;
-    }
-
-    @@keyframes backgroundScroll {
-        0% { transform: translateX(0); }
-        100% { transform: translateX(70px); }
-    }
-
-    .stat-card {
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        border-radius: 20px;
-        padding: 2rem;
-        text-align: center;
-        transition: all 0.3s ease;
-        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-        height: 100%;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.5);
-    }
-
-    .stat-value {
-        font-size: 3rem;
-        font-weight: 800;
-        margin-bottom: 0.5rem;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-
-    .stat-label {
-        color: rgba(255,255,255,0.9);
-        font-weight: 600;
-        font-size: 1rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .content-card {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 20px;
-        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-        overflow: hidden;
-        margin-bottom: 2rem;
-    }
-
-    .content-card .card-header {
-        background: rgba(255, 255, 255, 0.15);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 1.5rem;
-        border-radius: 0;
-    }
-
-    .content-card .card-header h5 {
-        color: #fff;
-        font-weight: 700;
-        margin: 0;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-
-    .content-card .card-body {
-        padding: 0;
-        background: rgba(255, 255, 255, 0.05);
-    }
-
-    .history-item {
-        padding: 1.5rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-
-    .history-item:hover {
-        background: rgba(255, 255, 255, 0.1);
-        transform: translateX(5px);
-    }
-
-    .history-item:last-child {
-        border-bottom: none;
-    }
-
-    .history-title {
-        color: #fff;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-
-    .history-meta {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .meta-item {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 0.875rem;
-        display: flex;
-        align-items: center;
-    }
-
-    .history-score {
-        display: flex;
-        align-items: center;
-    }
-
-    .score-badge {
-        padding: 0.5rem 1rem;
-        border-radius: 15px;
-        font-weight: 700;
-        font-size: 1.1rem;
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-        backdrop-filter: blur(5px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-
-    .history-summary {
-        margin-top: 1rem;
-    }
-
-    .summary-stats {
-        display: flex;
-        gap: 1.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .summary-stat {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-
-    .stat-number {
-        font-size: 1.5rem;
-        font-weight: 700;
-        line-height: 1;
-    }
-
-    .stat-text {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .top-recommendation {
-        color: rgba(255, 255, 255, 0.9);
-        font-style: italic;
-        padding: 0.75rem;
-        background: rgba(78, 205, 196, 0.1);
-        border-radius: 10px;
-        border-left: 4px solid #4ecdc4;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-    }
-
-    .empty-icon {
-        font-size: 4rem;
-        color: rgba(255, 255, 255, 0.4);
-        margin-bottom: 1.5rem;
-    }
-
-    .section-spacing {
-        margin-bottom: 3rem;
-    }
-
-    .fade-in-down {
-        animation: fadeInDown 0.8s ease;
-    }
-
-    .fade-in-up {
-        animation: fadeInUp 0.8s ease;
-    }
-
-    @@keyframes fadeInDown {
-        from {
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @@keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Responsive Design */
-    @@media (max-width: 768px) {
-        .summary-stats {
-            justify-content: center;
-        }
-
-        .history-meta {
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .d-flex.justify-content-between {
-            flex-direction: column;
-            gap: 1rem;
-        }
-    }
-</style>
 
 @code {
     private List<ReviewResult> allReviews = new();
