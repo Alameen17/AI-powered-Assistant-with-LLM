@@ -30,7 +30,7 @@ public static class TestRunner
         await tests.GetFileContentAsync_WithValidFile_ReturnsContent();
     }
 
-    private static async Task RunCodeReviewServiceTests()
+    private static Task RunCodeReviewServiceTests()
     {
         Console.WriteLine("\n--- Code Review Service Tests ---");
 
@@ -47,9 +47,10 @@ public static class TestRunner
         var service = new CodeReviewService(mockLlm.Object, mockGit.Object, mockLogger.Object);
 
         Console.WriteLine("Code Review Service initialized successfully: PASS");
+        return Task.CompletedTask;
     }
 
-    private static async Task RunLlmServiceTests()
+    private static Task RunLlmServiceTests()
     {
         Console.WriteLine("\n--- LLM Service Tests ---");
 
@@ -68,5 +69,6 @@ public static class TestRunner
         {
             Console.WriteLine($"LLM Service initialization failed: {ex.Message}");
         }
+        return Task.CompletedTask;
     }
 }

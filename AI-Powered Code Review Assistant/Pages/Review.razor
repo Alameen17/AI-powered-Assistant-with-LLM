@@ -8,7 +8,7 @@
 
 <PageTitle>AI Code Review</PageTitle>
 
-<div class="review-container">
+<div class="page-content">
     <!-- Animated Background -->
     <div class="animated-bg"></div>
     
@@ -388,11 +388,8 @@
 
 <style>
     /* Updated: 2025-09-21 21:41 - Force browser refresh */
-    .review-container {
-        min-height: 100vh;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        position: relative;
-        overflow: hidden;
+    .page-content {
+        /* Inheriting from app.css - no need to override here */
     }
 
     .animated-bg {
@@ -1353,13 +1350,14 @@
     }
 
     // Quick Action Methods
-    private async Task LoadSampleProject()
+    private Task LoadSampleProject()
     {
         reviewRequest.RepositoryPath = "https://github.com/sample/demo-project";
         activeTab = "repository";
         currentStep = 2;
         successMessage = "Sample project loaded. Click 'Start Analysis' to begin.";
         StateHasChanged();
+        return Task.CompletedTask;
     }
 
     private void ShowRecentProjects()

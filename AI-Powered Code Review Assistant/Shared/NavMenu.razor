@@ -13,7 +13,7 @@
     </button>
 </div>
 
-<div class="@NavMenuCssClass modern-nav-menu" @onclick="ToggleNavMenu">
+<div class="@NavMenuCssClass modern-nav-menu">
     <nav class="nav-links">
         <div class="nav-item">
             <NavLink class="modern-nav-link" href="" Match="NavLinkMatch.All">
@@ -51,12 +51,19 @@
 </div>
 
 @code {
-    private bool collapseNavMenu = true;
+    private bool collapseNavMenu = false; // Default to expanded on desktop
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : "show";
 
-    private void ToggleNavMenu()
+    public void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+        StateHasChanged();
+    }
+
+    protected override void OnInitialized()
+    {
+        // On desktop, nav should be expanded by default
+        collapseNavMenu = false;
     }
 }

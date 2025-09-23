@@ -117,21 +117,23 @@ public class GitService : IGitService
         }
     }
 
-    public async Task<IEnumerable<string>> GetModifiedFilesAsync(string repoPath)
+    public Task<IEnumerable<string>> GetModifiedFilesAsync(string repoPath)
     {
         try
         {
             using var repo = new Repository(repoPath);
             var status = repo.RetrieveStatus();
 
-            return status.Where(s => s.State != FileStatus.Unaltered && s.State != FileStatus.Ignored)
+            var result = status.Where(s => s.State != FileStatus.Unaltered && s.State != FileStatus.Ignored)
                          .Select(s => s.FilePath)
                          .ToList();
+
+            return Task.FromResult<IEnumerable<string>>(result);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting modified files in repo {RepoPath}", repoPath);
-            return Enumerable.Empty<string>();
+            return Task.FromResult(Enumerable.Empty<string>());
         }
     }
 
@@ -153,7 +155,7 @@ public class GitService : IGitService
         }
     }
 
-    public async Task<CommitInfo> GetCommitInfoAsync(string repoPath, string commitHash)
+    public Task<CommitInfo> GetCommitInfoAsync(string repoPath, string commitHash)
     {
         try
         {
@@ -162,12 +164,12 @@ public class GitService : IGitService
 
             if (commit == null)
             {
-                return new CommitInfo();
+                return Task.FromResult(new CommitInfo());
             }
 
             var stats = repo.Diff.Compare<PatchStats>(commit.Parents.FirstOrDefault()?.Tree, commit.Tree);
 
-            return new CommitInfo
+            var result = new CommitInfo
             {
                 Hash = commit.Sha,
                 Author = commit.Author.Name,
@@ -180,11 +182,13 @@ public class GitService : IGitService
                     ? repo.Diff.Compare<TreeChanges>(commit.Parents.First().Tree, commit.Tree).Select(c => c.Path).ToList()
                     : new List<string>()
             };
+
+            return Task.FromResult(result);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting commit info for {CommitHash} in repo {RepoPath}", commitHash, repoPath);
-            return new CommitInfo();
+            return Task.FromResult(new CommitInfo());
         }
     }
 

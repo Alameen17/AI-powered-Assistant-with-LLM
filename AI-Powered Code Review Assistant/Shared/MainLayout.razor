@@ -2,14 +2,19 @@
 
 <div class="page">
     <div class="sidebar">
-        <NavMenu />
+        <NavMenu @ref="navMenu" />
     </div>
 
     <main>
         <div class="top-row px-4">
-            <h3 class="text-white">
-                <i class="fas fa-robot"></i> AI Code Review Assistant
-            </h3>
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <h3 class="text-white mb-0">
+                    <i class="fas fa-robot"></i> AI Code Review Assistant
+                </h3>
+                <button class="nav-toggle d-md-none" @onclick="ToggleNavMenu">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
         </div>
 
         <article class="content px-4">
@@ -17,3 +22,17 @@
         </article>
     </main>
 </div>
+
+@code {
+    private bool navMenuExpanded = false;
+    private NavMenu? navMenu;
+
+    private void ToggleNavMenu()
+    {
+        navMenuExpanded = !navMenuExpanded;
+        if (navMenu != null)
+        {
+            navMenu.ToggleNavMenu();
+        }
+    }
+}

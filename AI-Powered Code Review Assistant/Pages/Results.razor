@@ -26,21 +26,18 @@
 
         // Wait a bit then force page styles
         setTimeout(() => {
-            const resultsContainer = document.querySelector('.results-container');
-            if (resultsContainer) {
-                resultsContainer.style.setProperty('background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'important');
-                resultsContainer.style.setProperty('min-height', '100vh', 'important');
+            const pageContent = document.querySelector('.page-content');
+            if (pageContent) {
+                pageContent.style.setProperty('background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'important');
+                pageContent.style.setProperty('min-height', 'calc(100vh - 4rem)', 'important');
             }
         }, 100);
     });
 </script>
 <style id="modern-results-style-@DateTime.Now.Ticks">
     /* FORCED MODERN DESIGN - @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") */
-    .results-container {
-        min-height: 100vh !important;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-        position: relative !important;
-        overflow-x: hidden !important;
+    .page-content {
+        /* Inheriting from app.css */
     }
 
     .animated-bg {
@@ -402,7 +399,7 @@
     }
 </style>
 
-<div class="results-container">
+<div class="page-content">
     <!-- Animated Background -->
     <div class="animated-bg"></div>
 
@@ -706,7 +703,7 @@
                 Navigation.NavigateTo("/review");
             }
         }
-        catch (Exception ex)
+        catch
         {
             // Handle error loading results
             Navigation.NavigateTo("/review");
